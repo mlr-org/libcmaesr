@@ -20,7 +20,7 @@
 #'   The seed for the random number generator. If `NA`, the seed is set to 0.
 #'   NB: The RNG of the libcmaes if different to the one in R and is hence not subject to R's seeding.
 #'   NA to disable, time is used in libcmaes to seed.
-#' @return A cmaes_control object.
+#' @return A cmaes_control S3 object, which is a list with the passed arguments.
 #' @export
 cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_integer_, ftarget = NA_real_,
   lambda = NA_integer_, sigma = NA_real_,
@@ -46,13 +46,57 @@ cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_intege
 }
 
 #' @title Covariance Matrix Adaptation Evolution Strategy
-#' @description The main function for the CMA-ES algorithm.
-#'
-#' @param objective The objective function to minimize.
-#' @param lower The lower bounds of the search space.
-#' @param upper The upper bounds of the search space.
-#' @param control A control object created by `cmaes_control`.
-#' @return `NULL` for now.
+#' @description 
+#' Implements the CMA-ES variants provided by libcmaes, see here: \url{https://github.com/CMA-ES/libcmaes/} via 
+#' a very light-weight C wrapper. 
+#' 
+#' 2.The control structure allows access to most control params of the ES, but CMASES is supposed handle most of them internally.
+#' Quoting Niko Hansen from here: 
+#' \dQuote{The CMA-ES does not require a tedious parameter tuning for its application. In fact, the choice of strategy internal parameters 
+#' is not left to the user (arguably with the exception of population size λ). Finding good (default) strategy parameters is considered 
+#' as part of the algorithm design, and not part of its application—the aim is to have a well-performing algorithm as is. 
+#' The default population size λ is comparatively small to allow for fast convergence. Restarts with increasing population size 
+#' (Auger & Hansen 2005) improve the global search performance. For the application of the CMA-ES, an initial solution, 
+#' an initial standard deviation (step-size, variables should be defined such that the same standard deviations can be 
+#' reasonably applied to all variables, see also here) and, possibly, the termination criteria (e.g. a function tolerance) 
+#' need to be set by the user. The most common applications are model calibration (e.g. curve fitting) and shape optimisation.}
+#' 
+#' Whether you believe in this completely for any problem is up to you, but the general idea is to run it in its defauls,
+#' and only chnange them if you know what you are doing.
+#' 
+#' #' 1. libcmaes could handle unbounded search spaces, but this is currently not supported, you need to set
+#' lower and upper bounds.
+#' 
+#' 3. Noisy functions / noisy handling CMAES is currently not supported.
+#' 
+#' 4. Surrogate variants are currently not supported.
+#' 
+#' 5. Geno-Pheno tranformation is automatically applied, in the sense that we use the linear scaling
+#' to handle the bounds. 
+#' Read more deatils here: \url{https://github.com/CMA-ES/libcmaes/wiki/Defining-and-using-bounds-on-parameters}.
+#' 
+#' @param objective (`function`)\cr
+#'   The objective function to minimize.
+#' @param x0 (`numeric(n)`)\cr
+#'   Initial point.
+#' @param lower (`numeric(n)`)\cr
+#'   Lower bounds of search space.
+#' @param upper (`numeric(n)`)\cr
+#'   Upper bounds of search space.
+#' @param control (`cmaes_control`)\cr
+#'   A control object created by [cmaes_control()].
+#' @return (name `list`). List with elements:
+#'   - 'x': (`numeric`)\cr
+#'     The best point found, length corresponds to x0, lower and upper.
+#'   - 'y': (`numeric(1)`)\cr
+#'     The objective value of the best point.
+#'   - 'edm': (`numeric(1)`)\cr
+#'     Expected distance to the minimum.
+#'   - 'time': (`numeric(1)`)\cr
+#'     The time taken to find the solution in seconds.
+#'   - 'status': (`integer(1)`)\cr
+#'     The status code, indicating succes, failure, or the reason for stopping.
+#'     See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 #' @useDynLib libcmaesr, .registration = TRUE
 #' @export
 cmaes = function(objective, x0, lower, upper, control) {

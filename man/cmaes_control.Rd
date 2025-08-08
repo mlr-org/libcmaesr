@@ -40,7 +40,7 @@ NB: The RNG of the libcmaes if different to the one in R and is hence not subjec
 NA to disable, time is used in libcmaes to seed.}
 }
 \value{
-A cmaes_control object.
+A cmaes_control S3 object, which is a list with the passed arguments.
 }
 \description{
 Create a control object for the CMA-ES algorithm.

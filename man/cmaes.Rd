@@ -7,17 +7,62 @@
 cmaes(objective, x0, lower, upper, control)
 }
 \arguments{
-\item{objective}{The objective function to minimize.}
+\item{objective}{(\code{function})\cr
+The objective function to minimize.}
 
-\item{lower}{The lower bounds of the search space.}
+\item{x0}{(\code{numeric(n)})\cr
+Initial point.}
 
-\item{upper}{The upper bounds of the search space.}
+\item{lower}{(\code{numeric(n)})\cr
+Lower bounds of search space.}
 
-\item{control}{A control object created by \code{cmaes_control}.}
+\item{upper}{(\code{numeric(n)})\cr
+Upper bounds of search space.}
+
+\item{control}{(\code{cmaes_control})\cr
+A control object created by \code{\link[=cmaes_control]{cmaes_control()}}.}
 }
 \value{
-\code{NULL} for now.
+(name \code{list}). List with elements:
+\itemize{
+\item 'x': (\code{numeric})\cr
+The best point found, length corresponds to x0, lower and upper.
+\item 'y': (\code{numeric(1)})\cr
+The objective value of the best point.
+\item 'edm': (\code{numeric(1)})\cr
+Expected distance to the minimum.
+\item 'time': (\code{numeric(1)})\cr
+The time taken to find the solution in seconds.
+\item 'status': (\code{integer(1)})\cr
+The status code, indicating succes, failure, or the reason for stopping.
+See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
+}
 }
 \description{
-The main function for the CMA-ES algorithm.
+Implements the CMA-ES variants provided by libcmaes, see here: \url{https://github.com/CMA-ES/libcmaes/} via
+a very light-weight C wrapper.
+
+2.The control structure allows access to most control params of the ES, but CMASES is supposed handle most of them internally.
+Quoting Niko Hansen from here:
+\dQuote{The CMA-ES does not require a tedious parameter tuning for its application. In fact, the choice of strategy internal parameters
+is not left to the user (arguably with the exception of population size λ). Finding good (default) strategy parameters is considered
+as part of the algorithm design, and not part of its application—the aim is to have a well-performing algorithm as is.
+The default population size λ is comparatively small to allow for fast convergence. Restarts with increasing population size
+(Auger & Hansen 2005) improve the global search performance. For the application of the CMA-ES, an initial solution,
+an initial standard deviation (step-size, variables should be defined such that the same standard deviations can be
+reasonably applied to all variables, see also here) and, possibly, the termination criteria (e.g. a function tolerance)
+need to be set by the user. The most common applications are model calibration (e.g. curve fitting) and shape optimisation.}
+
+Whether you believe in this completely for any problem is up to you, but the general idea is to run it in its defauls,
+and only chnange them if you know what you are doing.
+
+#' 1. libcmaes could handle unbounded search spaces, but this is currently not supported, you need to set
+lower and upper bounds.
+\enumerate{
+\item Noisy functions / noisy handling CMAES is currently not supported.
+\item Surrogate variants are currently not supported.
+\item Geno-Pheno tranformation is automatically applied, in the sense that we use the linear scaling
+to handle the bounds.
+Read more deatils here: \url{https://github.com/CMA-ES/libcmaes/wiki/Defining-and-using-bounds-on-parameters}.
+}
 }

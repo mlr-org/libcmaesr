@@ -10,23 +10,26 @@ using Eigen::VectorXd;
 /* 
 FIXME:
 - allow to set many thing in cmaes params
-- doc linear scaling
+
+- check via debugging that lin scaling is used
+
 - use lower and upper bounds
   can he have unbounded dec vars? inf bounds?
   for now ONLY support given bounds, but we can also be unbounded later. 
 - figure out how we can "disable" option in cmaes params, in R they should then be NA? or NULL?
 - map cmaes algo selection to ints, no we can set this as a string
-- in docs link to status code of result
 - cmaparams.set_x0(-3.0,3.0); // set x0 domain as [-3,3]^d where d is the dimension of the pro
 - look at and test multithreading
 - check and implement stop crits
-- check via debugging that lin scaling is used
 - properly doc the function interface in R. do we even allow a non-vec obj fun?
 - unit test some NA combos for ctrl params
 - do speed test vs 1-2 other packages and maybe perf test
+- consider noisy case
+- look at surrogates
+- run R cmd check
+
 - do proper debug printer and put it in rc-helpers
 - RC_helpers: add copy function for vecs and matrixes (rows, cols)
-- RC_hleprs: list. better set functions, for scalars
 */
 
  
