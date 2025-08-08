@@ -16,14 +16,17 @@
 #' @param sigma (`numeric(1)`)\cr 
 #'   Initial sigma for covariance.
 #'   NA to for default handling by libcmaes.
+#' @param max_restarts (`integer(1)`)\cr 
+#'   The maximum number of restarts, for IPOP and BIPOP.
+#'   NA to for default handling by libcmaes.
 #' @param seed (`integer(1)`)\cr 
 #'   The seed for the random number generator. If `NA`, the seed is set to 0.
 #'   NB: The RNG of the libcmaes if different to the one in R and is hence not subject to R's seeding.
-#'   NA to disable, time is used in libcmaes to seed.
+#'   NA to for default handling by libcmaes, time is used in libcmaes to seed.
 #' @return A cmaes_control S3 object, which is a list with the passed arguments.
 #' @export
 cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_integer_, ftarget = NA_real_,
-  lambda = NA_integer_, sigma = NA_real_,
+  lambda = NA_integer_, sigma = NA_real_, max_restarts = NA_integer_,
   seed = NA_integer_) 
 {
   assert_choice(algo, c("aCMAES", "BIPOP_CMAES"))
@@ -32,6 +35,7 @@ cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_intege
   assert_number(ftarget, lower = 0, na.ok = TRUE)
   lambda = asInt(lambda, lower = 2, na.ok = TRUE)
   assert_number(sigma, lower = 0, na.ok = TRUE)
+  max_restarts = asInt(max_restarts, lower = 0, na.ok = TRUE)
   seed = asInt(seed, na.ok = TRUE)
   res = list(
     algo = algo,
@@ -40,6 +44,7 @@ cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_intege
     ftarget = ftarget,
     lambda = lambda,
     sigma = sigma,
+    max_restarts = max_restarts,
     seed = seed
   )
   set_class(res, "cmaes_control")

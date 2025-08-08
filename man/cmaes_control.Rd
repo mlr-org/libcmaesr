@@ -11,6 +11,7 @@ cmaes_control(
   ftarget = NA_real_,
   lambda = NA_integer_,
   sigma = NA_real_,
+  max_restarts = NA_integer_,
   seed = NA_integer_
 )
 }
@@ -37,10 +38,14 @@ Must be at least 2; NA to for default handling by libcmaes.}
 Initial sigma for covariance.
 NA to for default handling by libcmaes.}
 
+\item{max_restarts}{(\code{integer(1)})\cr
+The maximum number of restarts, for IPOP and BIPOP.
+NA to for default handling by libcmaes.}
+
 \item{seed}{(\code{integer(1)})\cr
 The seed for the random number generator. If \code{NA}, the seed is set to 0.
 NB: The RNG of the libcmaes if different to the one in R and is hence not subject to R's seeding.
-NA to disable, time is used in libcmaes to seed.}
+NA to for default handling by libcmaes, time is used in libcmaes to seed.}
 }
 \value{
 A cmaes_control S3 object, which is a list with the passed arguments.

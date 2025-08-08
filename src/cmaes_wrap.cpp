@@ -10,7 +10,6 @@ using Eigen::VectorXd;
 /* 
 FIXME:
 - allow to set many thing in cmaes params
-- check via debugging that lin scaling is used
 - map cmaes algo selection to ints, no we can set this as a string
 - cmaparams.set_x0(-3.0,3.0); // set x0 domain as [-3,3]^d where d is the dimension of the pro
 - look at and test multithreading
@@ -20,11 +19,13 @@ FIXME:
 - show some progess and allow user interupt
 - do proper debug printer and put it in rc-helpers
 - RC_helpers: add copy function for vecs and matrixes (rows, cols)
+- check restarts for ipop and bipop with some form of test 
 
 - provide readme with install instrauctions and minimal example
 - do speed test vs 1-2 other packages and maybe perf test
 - run R cmd check
 - read all files
+- read python version
 
 - allow non-vectorized objective. to use multithreading.
 - consider noisy case
@@ -80,6 +81,8 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   if (max_iter != NA_INTEGER) cmaparams.set_max_iter(max_iter); 
   double ftarget = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "ftarget"));
   if (!R_IsNA(ftarget)) cmaparams.set_ftarget(ftarget);
+  int max_restarts = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_restarts"));
+  if (max_restarts != NA_INTEGER) cmaparams.set_restarts(max_restarts);
  
   // dummy needed for constructer, we bypass it later
   FitFunc dummy_scalar = [](const double*, int){ return 0.0; };
