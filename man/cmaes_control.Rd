@@ -31,7 +31,7 @@ NA to disable.}
 
 \item{lambda}{(\code{integer(1)})\cr
 Number of generated descendents per iteration.
-NA to for default handling by libcmaes.}
+Must be at least 2; NA to for default handling by libcmaes.}
 
 \item{sigma}{(\code{numeric(1)})\cr
 Initial sigma for covariance.

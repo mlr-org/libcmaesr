@@ -12,7 +12,7 @@
 #'   NA to disable.
 #' @param lambda (`integer(1)`)\cr 
 #'   Number of generated descendents per iteration.
-#'   NA to for default handling by libcmaes.
+#'   Must be at least 2; NA to for default handling by libcmaes.
 #' @param sigma (`numeric(1)`)\cr 
 #'   Initial sigma for covariance.
 #'   NA to for default handling by libcmaes.
@@ -30,7 +30,7 @@ cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_intege
   max_fevals = asInt(max_fevals, lower = 1, na.ok = TRUE)
   max_iter = asInt(max_iter, lower = 1, na.ok = TRUE)
   assert_number(ftarget, lower = 0, na.ok = TRUE)
-  lambda = asInt(lambda, lower = 1, na.ok = TRUE)
+  lambda = asInt(lambda, lower = 2, na.ok = TRUE)
   assert_number(sigma, lower = 0, na.ok = TRUE)
   seed = asInt(seed, na.ok = TRUE)
   res = list(
