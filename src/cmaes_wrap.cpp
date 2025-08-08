@@ -9,7 +9,6 @@ using Eigen::VectorXd;
 
 /* 
 FIXME:
-- seed cmaes 
 - allow to set many thing in cmaes params
 - doc linear scaling
 - use lower and upper bounds
@@ -27,6 +26,9 @@ FIXME:
 - properly doc the function interface in R. do we even allow a non-vec obj fun?
 - create unit tests
 - unit test some NA combos for ctrl params
+- do speed test vs 1-2 other packages and maybe perf test
+- unit test lambda
+- do proper debug printer and put it in rc-helpers
 */
 
  
@@ -55,7 +57,7 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
 
   int dim = Rf_length(s_x0);
   double sigma = -1;
-  int lambda = -1;
+  int lambda = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "lambda")); 
   int seed = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "seed")); 
   seed = (seed == NA_INTEGER) ? 0 : seed;
   
@@ -83,41 +85,54 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   SEXP s_x = RC_dblmat_create_PROTECT(lambda, dim); 
 
   while (!es.stop()) {
-      dMat cands_x = es.ask();  // dim x lambda
-      Rprintf("candidates (%ld x %ld):\n", cands_x.rows(), cands_x.cols());
-      for(int i = 0; i < cands_x.rows(); i++) {
-        for(int j = 0; j < cands_x.cols(); j++) {
-          Rprintf("%f ", cands_x(i,j));
-        }
-        Rprintf("\n");
-      }
+    dMat cands_x = es.ask();  // dim x lambda
 
-      // copy data to s_x and eval in R 
+    Rprintf("candidates (%ld x %ld):\n", cands_x.rows(), cands_x.cols());
+    for (int r=0; r<lambda; r++) {
+      dVec x = cands_x.col(r);
+      Rprintf("x(%d): ", r);
       for (int i = 0; i < dim; i++) {
-        for (int j = 0; j < lambda; j++) {
-          REAL(s_x)[i*lambda + j] = cands_x(i, j);
-        }
+        Rprintf("%f ", x(i));
       }
-      Rprintf("s_x copied\n");
-      SEXP s_call = PROTECT(Rf_lang2(s_obj, s_x));
-      int err = 0;
-      SEXP s_y = PROTECT(R_tryEval(s_call, R_GlobalEnv, &err));
-      if (err) {
-        UNPROTECT(3); // s_x, s_y, s_call
-        Rf_error("objective evaluation failed");
+      Rprintf("\n");
+
+      dVec xp = gp.pheno(x);
+      Rprintf("x-pheno(%d): ", r);
+      for (int i = 0; i < dim; i++) {
+        Rprintf("%f ", xp(i));
       }
-      UNPROTECT(2); // s_call, s_y
-      // set x and y of candidates
-      CMASolutions &sols = es.get_solutions();
-      for (int r=0; r<sols.size(); r++) {
-  	    sols.get_candidate(r).set_x(cands_x.col(r));
-        sols.get_candidate(r).set_fvalue(REAL(s_y)[r]);
-      }
-      es.update_fevals(sols.size());
-      es.tell();     
-      es.inc_iter();    
+      Rprintf("\n");
     }
+
+    // trafo to pheno (!), copy to s_x and eval in R 
+    for (int r = 0; r < lambda; r++) {
+      dVec x = cands_x.col(r);
+      dVec xp = gp.pheno(x);
+      for (int i = 0; i < dim; i++) {
+        REAL(s_x)[i*lambda + r] = xp(i);
+      }
+    }
+    Rprintf("s_x copied\n");
+    SEXP s_call = PROTECT(Rf_lang2(s_obj, s_x));
+    int err = 0;
+    SEXP s_y = PROTECT(R_tryEval(s_call, R_GlobalEnv, &err));
+    if (err) {
+      UNPROTECT(3); // s_x, s_y, s_call
+      Rf_error("libcmaesr: objective evaluation failed!");
+    }
+    UNPROTECT(2); // s_call, s_y
+    // set x and y of candidates
+    CMASolutions &sols = es.get_solutions();
+    for (int r=0; r<sols.size(); r++) {
+      sols.get_candidate(r).set_x(cands_x.col(r));
+      sols.get_candidate(r).set_fvalue(REAL(s_y)[r]);
+    }
+    es.update_fevals(sols.size());
+    es.tell();     
+    es.inc_iter();    
+  }
  
+  // get best seen candidate and trafo to pheno (!)
   const auto &sols = es.get_solutions();
   Candidate bcand = sols.get_best_seen_candidate();
   dVec best_x = gp.pheno(bcand.get_x_dvec()); 

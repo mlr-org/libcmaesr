@@ -9,6 +9,7 @@ cmaes_control(
   max_fevals = 100,
   max_iter = NA_integer_,
   ftarget = NA_real_,
+  lambda = NA_integer_,
   seed = NA_integer_
 )
 }

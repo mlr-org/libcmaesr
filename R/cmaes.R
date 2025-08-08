@@ -17,18 +17,21 @@
 #' @return A cmaes_control object.
 #' @export
 cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_integer_, ftarget = NA_real_,
+  lambda = NA_integer_,
   seed = NA_integer_) 
 {
   assert_choice(algo, c("aCMAES", "BIPOP_CMAES"))
-  assert_int(max_fevals, lower = 1, na.ok = TRUE)
-  assert_int(max_iter, lower = 1, na.ok = TRUE)
+  max_fevals = asInt(max_fevals, lower = 1, na.ok = TRUE)
+  max_iter = asInt(max_iter, lower = 1, na.ok = TRUE)
   assert_number(ftarget, lower = 0, na.ok = TRUE)
+  lambda = asInt(lambda, lower = 1, na.ok = TRUE)
   seed = asInt(seed, na.ok = TRUE)
   res = list(
     algo = algo,
     max_fevals = max_fevals,
     max_iter = max_iter,
     ftarget = ftarget,
+    lambda = lambda,
     seed = seed
   )
   set_class(res, "cmaes_control")
