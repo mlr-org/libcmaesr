@@ -90,6 +90,17 @@ SEXP RC_list_get_el_by_name(SEXP s_list, const char *name) {
   return VECTOR_ELT(s_list, i);
 }
 
+SEXP RC_list_set_el_intscalar(SEXP s_list, int idx, int x) {
+  SET_VECTOR_ELT(s_list, idx, Rf_ScalarInteger(x)); // dont need to protect here
+  return s_list;
+}
+
+SEXP RC_list_set_el_dblscalar(SEXP s_list, int idx, double x) {
+  SET_VECTOR_ELT(s_list, idx, Rf_ScalarReal(x)); // dont need to protect here
+  return s_list;
+}
+
+
 // ********** data.frame **********
 
 
@@ -152,6 +163,6 @@ SEXP RC_tryeval_PROTECT(SEXP s_fun, SEXP s_arg, const char *errmsg, int on_err_u
     UNPROTECT(2 + on_err_unprotect); // s_call, s_res, + requested by user
     Rf_error("%s", errmsg);
   }
-  UNPROTECT(2); // s_call, s_res
+  UNPROTECT(1); // s_call
   return s_res;
 }

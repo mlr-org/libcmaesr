@@ -51,6 +51,11 @@ SEXP RC_list_create_withnames_PROTECT(int n, const char **names);
 // extract list element by name, returns R_NilValue if not found
 SEXP RC_list_get_el_by_name(SEXP s_list, const char *name);
 
+// // set list elements by index
+SEXP RC_list_set_el_intscalar(SEXP s_list, int idx, int x);
+SEXP RC_list_set_el_dblscalar(SEXP s_list, int idx, double x);
+
+
 // ********** data.frame **********
 
 // get number of rows in data.frame
@@ -72,6 +77,7 @@ SEXP RC_r6_get_member(SEXP s_r6, const char* name);
 void RC_r6_set_member(SEXP s_r6, const char* name, SEXP s_value);
 
 // ********** R function calls **********
+
 // call R function with argument, return result, in simple R_tryEval
 // if error, unprotect nr of objects requested by user and throw error with msg
 // NB: dont use this if you need more complex cleanup / memory management on error!

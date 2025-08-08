@@ -112,7 +112,7 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
         REAL(s_x)[i*lambda + r] = xp(i);
       }
     }
-    Rprintf("s_x copied\n");
+    // Rprintf("s_x copied\n");
     SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // on_err: unprotect s_x
     CMASolutions &sols = es.get_solutions();
     for (int r=0; r<sols.size(); r++) {
@@ -121,7 +121,8 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
     }
     es.update_fevals(sols.size());
     es.tell();     
-    es.inc_iter();    
+    es.inc_iter(); 
+    UNPROTECT(1); // s_y
   }
  
   // get best seen candidate and trafo to pheno (!)
@@ -130,24 +131,15 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   dVec best_x = gp.pheno(bcand.get_x_dvec()); 
 
   // copy results to R
-  SEXP s_res_x = RC_dblvec_create_PROTECT(dim);
-  SEXP s_res_y = RC_dblscalar_create_PROTECT(bcand.get_fvalue());
-  SEXP s_res_edm = RC_dblscalar_create_PROTECT(sols.edm());
-  SEXP s_res_time = RC_dblscalar_create_PROTECT(sols.elapsed_time() / 1000.0);
-  SEXP s_res_status = RC_intscalar_create_PROTECT(sols.run_status()); 
-
-  for (int i = 0; i < dim; i++) {
-      REAL(s_res_x)[i] = best_x[i];
-  }
-
   const char* res_names[] = {"x", "y", "edm", "time", "status"};
   SEXP s_res = RC_list_create_withnames_PROTECT(5, res_names);
+  SEXP s_res_x = RC_dblvec_create_init_PROTECT(dim, best_x.data());
   SET_VECTOR_ELT(s_res, 0, s_res_x);
-  SET_VECTOR_ELT(s_res, 1, s_res_y);
-  SET_VECTOR_ELT(s_res, 2, s_res_edm);
-  SET_VECTOR_ELT(s_res, 3, s_res_time);
-  SET_VECTOR_ELT(s_res, 4, s_res_status);
-  UNPROTECT(7); // s_x, s_res, s_res_x, s_res_y, s_res_edm, s_res_time, s_res_status
+  RC_list_set_el_dblscalar(s_res, 1, bcand.get_fvalue());
+  RC_list_set_el_dblscalar(s_res, 2, sols.edm());
+  RC_list_set_el_dblscalar(s_res, 3, sols.elapsed_time() / 1000.0);
+  RC_list_set_el_intscalar(s_res, 4, sols.run_status());
+  UNPROTECT(3); // s_x, s_res, s_res_x
     
   return s_res;
 }
