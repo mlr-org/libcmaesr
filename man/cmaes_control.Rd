@@ -10,6 +10,7 @@ cmaes_control(
   max_iter = NA_integer_,
   ftarget = NA_real_,
   lambda = NA_integer_,
+  sigma = NA_real_,
   seed = NA_integer_
 )
 }
@@ -27,6 +28,14 @@ NA to disable.}
 \item{ftarget}{(\code{numeric(1)})\cr
 Stop when this target function value is reached.
 NA to disable.}
+
+\item{lambda}{(\code{integer(1)})\cr
+Number of generated descendents per iteration.
+NA to for default handling by libcmaes.}
+
+\item{sigma}{(\code{numeric(1)})\cr
+Initial sigma for covariance.
+NA to for default handling by libcmaes.}
 
 \item{seed}{(\code{integer(1)})\cr
 The seed for the random number generator. If \code{NA}, the seed is set to 0.

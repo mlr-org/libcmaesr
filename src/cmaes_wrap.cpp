@@ -29,6 +29,8 @@ FIXME:
 - do speed test vs 1-2 other packages and maybe perf test
 - unit test lambda
 - do proper debug printer and put it in rc-helpers
+- RC_helpers: add copy function for vecs and matrixes (rows, cols)
+- RC_hleprs: list. better set functions, for scalars
 */
 
  
@@ -55,14 +57,16 @@ FIXME:
 
 extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
 
+  // get dim, lambda, sigma, seed
+  // for lambda and sigma, if NA, use default values
   int dim = Rf_length(s_x0);
-  double sigma = -1;
   int lambda = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "lambda")); 
+  if (lambda == NA_INTEGER) lambda = -1;
+  double sigma = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "sigma")); 
+  if (R_IsNA(sigma)) sigma = -1;
   int seed = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "seed")); 
   seed = (seed == NA_INTEGER) ? 0 : seed;
-  
-  
-  Rprintf("dim: %d; sigma: %f\n", dim, sigma);
+    
  
   // init params and geno-pheno transform, with lin-scaling strategy
   GenoPheno<pwqBoundStrategy, linScalingStrategy> gp(REAL(s_lower), REAL(s_upper), dim);
@@ -74,34 +78,34 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   int max_iter = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_iter"));
   if (max_iter != NA_INTEGER) cmaparams.set_max_iter(max_iter); 
   double ftarget = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "ftarget"));
-  if (ftarget != NA_REAL) cmaparams.set_ftarget(ftarget);
+  if (!R_IsNA(ftarget)) cmaparams.set_ftarget(ftarget);
  
+  // dummy needed for constructer, we bypass it later
   FitFunc dummy_scalar = [](const double*, int){ return 0.0; };
   auto es = CMAStrategy<CovarianceUpdate, GenoPheno<pwqBoundStrategy, linScalingStrategy>>
     (dummy_scalar, cmaparams);
-  lambda = cmaparams.lambda();  
-  Rprintf("lambda: %d\n", lambda);
+  lambda = cmaparams.lambda();  // get lambda from cmaparams if we used -1 for defaults before
+  Rprintf("seed: %d; lambda: %d; sigma: %f\n", seed, lambda, sigma);
 
   SEXP s_x = RC_dblmat_create_PROTECT(lambda, dim); 
 
   while (!es.stop()) {
     dMat cands_x = es.ask();  // dim x lambda
 
-    Rprintf("candidates (%ld x %ld):\n", cands_x.rows(), cands_x.cols());
+    // Rprintf("candidates (%ld x %ld):\n", cands_x.rows(), cands_x.cols());
     for (int r=0; r<lambda; r++) {
       dVec x = cands_x.col(r);
-      Rprintf("x(%d): ", r);
-      for (int i = 0; i < dim; i++) {
-        Rprintf("%f ", x(i));
-      }
-      Rprintf("\n");
-
-      dVec xp = gp.pheno(x);
-      Rprintf("x-pheno(%d): ", r);
-      for (int i = 0; i < dim; i++) {
-        Rprintf("%f ", xp(i));
-      }
-      Rprintf("\n");
+      // Rprintf("x(%d): ", r);
+      // for (int i = 0; i < dim; i++) {
+      //   Rprintf("%f ", x(i));
+      // }
+      // Rprintf("\n");
+      // dVec xp = gp.pheno(x);
+      // Rprintf("x-pheno(%d): ", r);
+      // for (int i = 0; i < dim; i++) {
+      //   Rprintf("%f ", xp(i));
+      // }
+      // Rprintf("\n");
     }
 
     // trafo to pheno (!), copy to s_x and eval in R 
@@ -113,15 +117,7 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
       }
     }
     Rprintf("s_x copied\n");
-    SEXP s_call = PROTECT(Rf_lang2(s_obj, s_x));
-    int err = 0;
-    SEXP s_y = PROTECT(R_tryEval(s_call, R_GlobalEnv, &err));
-    if (err) {
-      UNPROTECT(3); // s_x, s_y, s_call
-      Rf_error("libcmaesr: objective evaluation failed!");
-    }
-    UNPROTECT(2); // s_call, s_y
-    // set x and y of candidates
+    SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // on_err: unprotect s_x
     CMASolutions &sols = es.get_solutions();
     for (int r=0; r<sols.size(); r++) {
       sols.get_candidate(r).set_x(cands_x.col(r));
@@ -138,19 +134,15 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   dVec best_x = gp.pheno(bcand.get_x_dvec()); 
 
   // copy results to R
-  SEXP s_res_x = PROTECT(Rf_allocVector(REALSXP, dim));
-  SEXP s_res_y = PROTECT(Rf_allocVector(REALSXP, 1));
-  SEXP s_res_edm = PROTECT(Rf_allocVector(REALSXP, 1));
-  SEXP s_res_time = PROTECT(Rf_allocVector(REALSXP, 1));
-  SEXP s_res_status = PROTECT(Rf_allocVector(REALSXP, 1));
+  SEXP s_res_x = RC_dblvec_create_PROTECT(dim);
+  SEXP s_res_y = RC_dblscalar_create_PROTECT(bcand.get_fvalue());
+  SEXP s_res_edm = RC_dblscalar_create_PROTECT(sols.edm());
+  SEXP s_res_time = RC_dblscalar_create_PROTECT(sols.elapsed_time() / 1000.0);
+  SEXP s_res_status = RC_intscalar_create_PROTECT(sols.run_status()); 
 
   for (int i = 0; i < dim; i++) {
       REAL(s_res_x)[i] = best_x[i];
   }
-  REAL(s_res_y)[0] = bcand.get_fvalue();
-  REAL(s_res_edm)[0] = sols.edm(); 
-  REAL(s_res_time)[0] = sols.elapsed_time() / 1000.0; // seconds
-  REAL(s_res_status)[0] = sols.run_status(); 
 
   const char* res_names[] = {"x", "y", "edm", "time", "status"};
   SEXP s_res = RC_list_create_withnames_PROTECT(5, res_names);

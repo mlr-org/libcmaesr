@@ -10,6 +10,12 @@
 #' @param ftarget (`numeric(1)`)\cr 
 #'   Stop when this target function value is reached.
 #'   NA to disable.
+#' @param lambda (`integer(1)`)\cr 
+#'   Number of generated descendents per iteration.
+#'   NA to for default handling by libcmaes.
+#' @param sigma (`numeric(1)`)\cr 
+#'   Initial sigma for covariance.
+#'   NA to for default handling by libcmaes.
 #' @param seed (`integer(1)`)\cr 
 #'   The seed for the random number generator. If `NA`, the seed is set to 0.
 #'   NB: The RNG of the libcmaes if different to the one in R and is hence not subject to R's seeding.
@@ -17,7 +23,7 @@
 #' @return A cmaes_control object.
 #' @export
 cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_integer_, ftarget = NA_real_,
-  lambda = NA_integer_,
+  lambda = NA_integer_, sigma = NA_real_,
   seed = NA_integer_) 
 {
   assert_choice(algo, c("aCMAES", "BIPOP_CMAES"))
@@ -25,6 +31,7 @@ cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_intege
   max_iter = asInt(max_iter, lower = 1, na.ok = TRUE)
   assert_number(ftarget, lower = 0, na.ok = TRUE)
   lambda = asInt(lambda, lower = 1, na.ok = TRUE)
+  assert_number(sigma, lower = 0, na.ok = TRUE)
   seed = asInt(seed, na.ok = TRUE)
   res = list(
     algo = algo,
@@ -32,6 +39,7 @@ cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_intege
     max_iter = max_iter,
     ftarget = ftarget,
     lambda = lambda,
+    sigma = sigma,
     seed = seed
   )
   set_class(res, "cmaes_control")

@@ -39,6 +39,10 @@ SEXP RC_intscalar_create_PROTECT(int k) {
   return PROTECT(Rf_ScalarInteger(k));
 }
 
+SEXP RC_dblscalar_create_PROTECT(double k) {
+  return PROTECT(Rf_ScalarReal(k));
+}
+
 // ********** vectors **********
 
 SEXP RC_intvec_create_PROTECT(int n) {
@@ -138,5 +142,16 @@ void RC_r6_set_member(SEXP s_r6, const char* name, SEXP s_value) {
   Rf_defineVar(Rf_install(name), s_value, s_r6);  // dont need to protect symbols
 }
 
+// ********** R function calls **********
 
-
+SEXP RC_tryeval_PROTECT(SEXP s_fun, SEXP s_arg, const char *errmsg, int on_err_unprotect) {
+  SEXP s_call = PROTECT(Rf_lang2(s_fun, s_arg));
+  int err = 0;
+  SEXP s_res = PROTECT(R_tryEval(s_call, R_GlobalEnv, &err));
+  if (err != 0) {
+    UNPROTECT(2 + on_err_unprotect); // s_call, s_res, + requested by user
+    Rf_error("%s", errmsg);
+  }
+  UNPROTECT(2); // s_call, s_res
+  return s_res;
+}

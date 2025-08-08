@@ -25,6 +25,8 @@ int RC_find_name(SEXP s_obj, const char *name);
 const char *RC_charscalar_as_string(SEXP s_x);
 // create integer scalar
 SEXP RC_intscalar_create_PROTECT(int k);
+// create double scalar
+SEXP RC_dblscalar_create_PROTECT(double k);
 
 // ********** vectors **********
 
@@ -68,6 +70,14 @@ SEXP RC_r6_get_member(SEXP s_r6, const char* name);
 // set R6 member by name
 // will throw an error if the symbol is not found in frame
 void RC_r6_set_member(SEXP s_r6, const char* name, SEXP s_value);
+
+// ********** R function calls **********
+// call R function with argument, return result, in simple R_tryEval
+// if error, unprotect nr of objects requested by user and throw error with msg
+// NB: dont use this if you need more complex cleanup / memory management on error!
+// except for the extra unprotect-on-error we assume nothhing more is needed / auto-cleaned-up
+SEXP RC_tryeval_PROTECT(SEXP s_fun, SEXP s_arg, const char* errmsg, int on_err_unprotect);
+
 
 #ifdef __cplusplus
 }
