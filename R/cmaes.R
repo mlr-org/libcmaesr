@@ -75,8 +75,12 @@ cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_intege
 #' to handle the bounds. 
 #' Read more deatils here: \url{https://github.com/CMA-ES/libcmaes/wiki/Defining-and-using-bounds-on-parameters}.
 #' 
-#' @param objective (`function`)\cr
-#'   The objective function to minimize.
+#' @param objective (`function(x)`)\cr
+#'   Objective function, to minimize. 
+#'   `x` is a numeric matrix with `lambda` rows and `n` = dim-of-x columns.
+#'   Evaluate them all in a batch fashion and return a numeric vector of length `n`.
+#'   This usually reduced overhead and allows you to orchestrate parallelization 
+#'   yourself if you need it because the objective function is more expensive.
 #' @param x0 (`numeric(n)`)\cr
 #'   Initial point.
 #' @param lower (`numeric(n)`)\cr
@@ -86,7 +90,7 @@ cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_intege
 #' @param control (`cmaes_control`)\cr
 #'   A control object created by [cmaes_control()].
 #' @return (name `list`). List with elements:
-#'   - 'x': (`numeric`)\cr
+#'   - 'x': (`numeric(n)`)\cr
 #'     The best point found, length corresponds to x0, lower and upper.
 #'   - 'y': (`numeric(1)`)\cr
 #'     The objective value of the best point.

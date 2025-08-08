@@ -7,8 +7,12 @@
 cmaes(objective, x0, lower, upper, control)
 }
 \arguments{
-\item{objective}{(\code{function})\cr
-The objective function to minimize.}
+\item{objective}{(\verb{function(x)})\cr
+Objective function, to minimize.
+\code{x} is a numeric matrix with \code{lambda} rows and \code{n} = dim-of-x columns.
+Evaluate them all in a batch fashion and return a numeric vector of length \code{n}.
+This usually reduced overhead and allows you to orchestrate parallelization
+yourself if you need it because the objective function is more expensive.}
 
 \item{x0}{(\code{numeric(n)})\cr
 Initial point.}
@@ -25,7 +29,7 @@ A control object created by \code{\link[=cmaes_control]{cmaes_control()}}.}
 \value{
 (name \code{list}). List with elements:
 \itemize{
-\item 'x': (\code{numeric})\cr
+\item 'x': (\code{numeric(n)})\cr
 The best point found, length corresponds to x0, lower and upper.
 \item 'y': (\code{numeric(1)})\cr
 The objective value of the best point.
