@@ -1,23 +1,20 @@
-#include <libcmaes/candidate.h>
 #include <libcmaes/cmaes.h>
+#include <Eigen/Dense>
+#include "rc_helpers.h"
 
 using namespace libcmaes;
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
-
-#define R_NO_REMAP
-#include <R.h>
-#include <Rinternals.h>
-#include "rc_helpers.h"
 
 /* 
 FIXME:
 - seed cmaes 
 - allow to set many thing in cmaes params
-- can sigma be a vector?
+- doc linear scaling
 - use lower and upper bounds
   can he have unbounded dec vars? inf bounds?
-  for now ONLY support given bounds, but we can also be unbounded later. this will
-  also then support scaling and resolve the sigma issue
+  for now ONLY support given bounds, but we can also be unbounded later. 
 - figure out how we can "disable" option in cmaes params, in R they should then be NA? or NULL?
 - map cmaes algo selection to ints, no we can set this as a string
 - in docs link to status code of result
@@ -28,92 +25,10 @@ FIXME:
 - check and implement stop crits
 - check via debugging that lin scaling is used
 - properly doc the function interface in R. do we even allow a non-vec obj fun?
+- create unit tests
+- unit test some NA combos for ctrl params
 */
-using namespace libcmaes; 
 
-
-// extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
-//   FitFunc r_obj_wrapper = [&s_obj](const double *x, const int N) {
-//     SEXP s_x = PROTECT(Rf_allocVector(REALSXP, N));
-//     for (int i = 0; i < N; i++) {
-//       REAL(s_x)[i] = x[i];
-//     }
-//     SEXP s_call = PROTECT(Rf_lang2(s_obj, s_x));
-//     int err = 0;
-//     SEXP s_y = R_tryEval(s_call, R_GlobalEnv, &err);
-//     if (err) {
-//       UNPROTECT(2);
-//       Rf_error("objective evaluation failed");
-//     }
-//     double y = REAL(s_y)[0];
-//     UNPROTECT(2);
-//     return y;
-//   };
-
-//   int dim = Rf_length(s_x0);
-//   double* x0 = REAL(s_x0);  
-//   double sigma = 0.1;
-//   Rprintf("dim: %d; sigma: %f\n", dim, sigma);
-      
-//   // init params and geno-pheno transform, with lin-scaling strategy
-//   GenoPheno<pwqBoundStrategy, linScalingStrategy> gp(REAL(s_lower), REAL(s_upper), dim);
-//   CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> 
-//     cmaparams(dim, x0, sigma,-1, 0, gp);
-
-//   // set further params  
-//   cmaparams.set_algo(aCMAES); 
-//   cmaparams.set_max_fevals(Rf_asInteger(RC_get_list_el_by_name(s_ctrl, "max_fevals"))); 
-//   cmaparams.set_max_iter(Rf_asInteger(RC_get_list_el_by_name(s_ctrl, "max_iter"))); 
-//   cmaparams.set_ftarget(Rf_asReal(RC_get_list_el_by_name(s_ctrl, "ftarget")));
-
-//   // run optimization  + convert solution back into parameter space
-//   CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy, linScalingStrategy>>(r_obj_wrapper, cmaparams);
-//   Candidate bcand = cmasols.best_candidate(); 
-//   gp.pheno(bcand.get_x_dvec()); 
-
-//   // copy results to R
-//   SEXP s_res_x = PROTECT(Rf_allocVector(REALSXP, dim));
-//   SEXP s_res_y = PROTECT(Rf_allocVector(REALSXP, 1));
-//   SEXP s_res_edm = PROTECT(Rf_allocVector(REALSXP, 1));
-//   SEXP s_res_time = PROTECT(Rf_allocVector(REALSXP, 1));
-//   SEXP s_res_status = PROTECT(Rf_allocVector(REALSXP, 1));
-
-//   for (int i = 0; i < dim; i++) {
-//       REAL(s_res_x)[i] = bcand.get_x_ptr()[i];
-//   }
-//   REAL(s_res_y)[0] = bcand.get_fvalue();
-//   REAL(s_res_edm)[0] = cmasols.edm(); 
-//   REAL(s_res_time)[0] = cmasols.elapsed_time() / 1000.0; // seconds
-//   REAL(s_res_status)[0] = cmasols.run_status(); 
-
-//   const char* res_names[] = {"x", "y", "edm", "time", "status"};
-//   SEXP s_res = RC_named_list_create_PROTECT(5, res_names);
-//   SET_VECTOR_ELT(s_res, 0, s_res_x);
-//   SET_VECTOR_ELT(s_res, 1, s_res_y);
-//   SET_VECTOR_ELT(s_res, 2, s_res_edm);
-//   SET_VECTOR_ELT(s_res, 3, s_res_time);
-//   SET_VECTOR_ELT(s_res, 4, s_res_status);
-//   UNPROTECT(6); // s_res, s_res_x, s_res_y, s_res_edm, s_res_time, s_res_status
-    
-//   return s_res;
-// }
-
-
-
- #include <libcmaes/cmaes.h>
- #include <Eigen/Dense>
- #include <memory>
- #include <stdexcept>
- #include <iostream>
- 
- using namespace libcmaes;
- using Eigen::MatrixXd;
- using Eigen::VectorXd;
- 
- std::vector<double> batch_eval(const MatrixXd &X){
-     VectorXd v = X.rowwise().squaredNorm();
-     return {v.data(), v.data() + v.size()};
- }
  
 //  /* ------------------------------------------------------------------ */
 //  /* 2. Factory: map a string to the chosen strategy class               */
@@ -135,12 +50,16 @@ using namespace libcmaes;
 //  }
  
 
+
 extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
 
   int dim = Rf_length(s_x0);
   double sigma = -1;
   int lambda = -1;
-  int seed = 0; 
+  int seed = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "seed")); 
+  seed = (seed == NA_INTEGER) ? 0 : seed;
+  
+  
   Rprintf("dim: %d; sigma: %f\n", dim, sigma);
  
   // init params and geno-pheno transform, with lin-scaling strategy
@@ -148,9 +67,12 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> cmaparams(dim, REAL(s_x0), sigma, lambda, seed, gp);
 
   // set further params  
-  cmaparams.set_max_fevals(Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_fevals"))); 
-  cmaparams.set_max_iter(Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_iter"))); 
-  cmaparams.set_ftarget(Rf_asReal(RC_list_get_el_by_name(s_ctrl, "ftarget")));
+  int max_fevals = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_fevals"));
+  if (max_fevals != NA_INTEGER) cmaparams.set_max_fevals(max_fevals); 
+  int max_iter = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_iter"));
+  if (max_iter != NA_INTEGER) cmaparams.set_max_iter(max_iter); 
+  double ftarget = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "ftarget"));
+  if (ftarget != NA_REAL) cmaparams.set_ftarget(ftarget);
  
   FitFunc dummy_scalar = [](const double*, int){ return 0.0; };
   auto es = CMAStrategy<CovarianceUpdate, GenoPheno<pwqBoundStrategy, linScalingStrategy>>

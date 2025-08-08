@@ -1,17 +1,35 @@
 #' @title CMA-ES Control Object
 #' @description Create a control object for the CMA-ES algorithm.
+#' @param algo The algorithm to use.
+#' @param max_fevals (`integer(1)`)\cr 
+#'   The maximum number of function evaluations.
+#'   NA to disable.
+#' @param max_iter (`integer(1)`)\cr 
+#'   The maximum number of ES iterations.
+#'   NA to disable.
+#' @param ftarget (`numeric(1)`)\cr 
+#'   Stop when this target function value is reached.
+#'   NA to disable.
+#' @param seed (`integer(1)`)\cr 
+#'   The seed for the random number generator. If `NA`, the seed is set to 0.
+#'   NB: The RNG of the libcmaes if different to the one in R and is hence not subject to R's seeding.
+#'   NA to disable, time is used in libcmaes to seed.
 #' @return A cmaes_control object.
 #' @export
-cmaes_control = function(algo = "aCMAES", max_fevals = 10000, max_iter = 100000, ftarget = 1e-8) {
+cmaes_control = function(algo = "aCMAES", max_fevals = 100, max_iter = NA_integer_, ftarget = NA_real_,
+  seed = NA_integer_) 
+{
   assert_choice(algo, c("aCMAES", "BIPOP_CMAES"))
-  assert_int(max_fevals, lower = 1)
-  assert_int(max_iter, lower = 1)
-  assert_number(ftarget, lower = 0)
+  assert_int(max_fevals, lower = 1, na.ok = TRUE)
+  assert_int(max_iter, lower = 1, na.ok = TRUE)
+  assert_number(ftarget, lower = 0, na.ok = TRUE)
+  seed = asInt(seed, na.ok = TRUE)
   res = list(
     algo = algo,
     max_fevals = max_fevals,
     max_iter = max_iter,
-    ftarget = ftarget
+    ftarget = ftarget,
+    seed = seed
   )
   set_class(res, "cmaes_control")
 }

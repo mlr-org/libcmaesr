@@ -6,10 +6,31 @@
 \usage{
 cmaes_control(
   algo = "aCMAES",
-  max_fevals = 10000,
-  max_iter = 100000,
-  ftarget = 1e-08
+  max_fevals = 100,
+  max_iter = NA_integer_,
+  ftarget = NA_real_,
+  seed = NA_integer_
 )
+}
+\arguments{
+\item{algo}{The algorithm to use.}
+
+\item{max_fevals}{(\code{integer(1)})\cr
+The maximum number of function evaluations.
+NA to disable.}
+
+\item{max_iter}{(\code{integer(1)})\cr
+The maximum number of ES iterations.
+NA to disable.}
+
+\item{ftarget}{(\code{numeric(1)})\cr
+Stop when this target function value is reached.
+NA to disable.}
+
+\item{seed}{(\code{integer(1)})\cr
+The seed for the random number generator. If \code{NA}, the seed is set to 0.
+NB: The RNG of the libcmaes if different to the one in R and is hence not subject to R's seeding.
+NA to disable, time is used in libcmaes to seed.}
 }
 \value{
 A cmaes_control object.
