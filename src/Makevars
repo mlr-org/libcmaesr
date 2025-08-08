@@ -1,0 +1,2 @@
+PKG_LIBS +=  -lcmaes 
+PKG_CPPFLAGS += -I/usr/include/eigen3 

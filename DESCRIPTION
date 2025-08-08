@@ -1,0 +1,33 @@
+Package: libcmaesr
+Title: Black-Box Optimization Toolkit
+Version: 0.1
+Authors@R: c(
+    person("Marc", "Becker", , "marcbecker@posteo.de", role = c("cre", "aut"),
+           comment = c(ORCID = "0000-0002-8115-0400"))
+  )
+Description: Features highly configurable search spaces via the 'paradox'
+    package and optimizes every user-defined objective function. The
+    package includes several optimization algorithms e.g. Random Search,
+    Iterated Racing, Bayesian Optimization (in 'mlr3mbo') and Hyperband
+    (in 'mlr3hyperband'). bbotk is the base package of 'mlr3tuning',
+    'mlr3fselect' and 'miesmuschel'.
+License: LGPL-3
+URL: https://bbotk.mlr-org.com, https://github.com/mlr-org/bbotk
+BugReports: https://github.com/mlr-org/bbotk/issues
+Depends:
+    paradox (>= 1.0.0),
+    R (>= 3.1.0)
+Imports:
+    checkmate (>= 2.0.0),
+    methods,
+    mlr3misc (>= 0.15.1)
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Config/testthat/parallel: false
+Encoding: UTF-8
+Language: en-US
+NeedsCompilation: yes
+Roxygen: list(markdown = TRUE, load = "installed")
+RoxygenNote: 7.3.2
+Collate: 'cmaes.R' 'zzz.R'
