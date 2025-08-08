@@ -6,17 +6,15 @@
 \usage{
 cmaes_control(
   algo = "aCMAES",
-  max_fevals = 100,
-  max_iter = NA_integer_,
-  ftarget = NA_real_,
-  lambda = NA_integer_,
-  sigma = NA_real_,
-  max_restarts = NA_integer_,
-  seed = NA_integer_
+  max_fevals = 10000,
+  max_iter = 100000,
+  ftarget = 1e-08
 )
 }
 \arguments{
-\item{algo}{The algorithm to use.}
+\item{algo}{(\code{character(1)})\cr
+The CMAES variant to use.
+Possible values are: \link{cmaes_algos}.}
 
 \item{max_fevals}{(\code{integer(1)})\cr
 The maximum number of function evaluations.

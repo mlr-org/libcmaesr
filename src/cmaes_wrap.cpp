@@ -6,6 +6,9 @@ using namespace libcmaes;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
+using MyGenoPheno = GenoPheno<pwqBoundStrategy, linScalingStrategy>;
+using MyCMAParameters = CMAParameters<MyGenoPheno>;
+
 
 /* 
 FIXME:
@@ -35,26 +38,115 @@ FIXME:
 
 */
 
- 
-//  /* ------------------------------------------------------------------ */
-//  /* 2. Factory: map a string to the chosen strategy class               */
-//  /* ------------------------------------------------------------------ */
-//  template<typename Real = double>
-//  std::unique_ptr<ESOStrategy<fit<Real>, model<Real>>>
-//  make_strategy(const std::string &variant,
-//                FitFunc dummy,               // unused scalar callback
-//                CMAParameters<> &params)
-//  {
-//      using Fit   = fit<Real>;
-//      using Model = model<Real>;
-//      if (variant == "cma")   return std::make_unique<CMAStrategy      <Fit,Model>>(dummy, params);
-//      if (variant == "sep")   return std::make_unique<SepCMAStrategy   <Fit,Model>>(dummy, params);
-//      if (variant == "vd")    return std::make_unique<VDCMAStrategy    <Fit,Model>>(dummy, params);
-//      if (variant == "ipop")  return std::make_unique<IPOPCMAStrategy  <Fit,Model>>(dummy, params);
-//      if (variant == "bipop") return std::make_unique<BIPOPCMAStrategy <Fit,Model>>(dummy, params);
-//      throw std::invalid_argument("unknown CMA-ES variant \"" + variant + '"');
-//  }
- 
+// temmplated version of the main ask-tell loop, so we can run all templated CMA-ES variants
+template <typename Optimizer>
+CMASolutions run_optimizer(Optimizer& optimizer, SEXP s_obj, int lambda, int dim, const MyGenoPheno& gp) {
+  SEXP s_x = RC_dblmat_create_PROTECT(lambda, dim);
+  while (!optimizer.stop()) {
+    dMat cands_x = optimizer.ask();
+    for (int r = 0; r < lambda; r++) {
+      dVec x = cands_x.col(r);
+      dVec xp = gp.pheno(x);
+      for (int i = 0; i < dim; i++) {
+        REAL(s_x)[i*lambda + r] = xp(i);
+      }
+    }
+    SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // on_err: unprotect s_x
+    CMASolutions &s = optimizer.get_solutions();
+    for (int r=0; r<s.size(); r++) {
+      s.get_candidate(r).set_x(cands_x.col(r));
+      s.get_candidate(r).set_fvalue(REAL(s_y)[r]);
+    }
+    optimizer.update_fevals(s.size());
+    optimizer.tell();
+    optimizer.inc_iter();
+    UNPROTECT(1); // s_y
+  }
+  UNPROTECT(1); // s_x
+  return optimizer.get_solutions();
+}
+
+// I see unfortunatly no way to do this without a switch statement, but at least we can use a template to run all variants
+// inspired by libcmaes/cmaes.h
+CMASolutions dispatch_optimizer(MyCMAParameters& cmaparams, SEXP s_obj, int lambda, int dim, const MyGenoPheno& gp) {
+
+  // dummy needed for constructer, we bypass it later
+  FitFunc dummy_scalar = [](const double*, int){ return 0.0; };
+  Rprintf("algo: %d\n", cmaparams.get_algo());
+  switch(cmaparams.get_algo()) {
+    case CMAES_DEFAULT: {
+      ESOptimizer<CMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case IPOP_CMAES: {
+      ESOptimizer<IPOPCMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case BIPOP_CMAES: {
+      ESOptimizer<BIPOPCMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case aCMAES: {
+      ESOptimizer<CMAStrategy<ACovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case aIPOP_CMAES: {
+      ESOptimizer<IPOPCMAStrategy<ACovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case aBIPOP_CMAES: {
+      ESOptimizer<BIPOPCMAStrategy<ACovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case sepCMAES: {
+      cmaparams.set_sep();
+      ESOptimizer<CMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case sepIPOP_CMAES: {
+      cmaparams.set_sep();
+      ESOptimizer<IPOPCMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case sepBIPOP_CMAES: {
+      cmaparams.set_sep();
+      ESOptimizer<BIPOPCMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case sepaCMAES: {
+      cmaparams.set_sep();
+      ESOptimizer<CMAStrategy<ACovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case sepaIPOP_CMAES: {
+      cmaparams.set_sep();
+      ESOptimizer<IPOPCMAStrategy<ACovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case sepaBIPOP_CMAES: {
+      cmaparams.set_sep();
+      ESOptimizer<BIPOPCMAStrategy<ACovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case VD_CMAES: {
+      cmaparams.set_vd();
+      ESOptimizer<CMAStrategy<VDCMAUpdate,MyGenoPheno>,MyCMAParameters> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case VD_IPOP_CMAES: {
+      cmaparams.set_vd();
+      ESOptimizer<IPOPCMAStrategy<VDCMAUpdate,MyGenoPheno>,MyCMAParameters> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    case VD_BIPOP_CMAES: {
+      cmaparams.set_vd();
+      ESOptimizer<BIPOPCMAStrategy<VDCMAUpdate,MyGenoPheno>,MyCMAParameters> cmaes(dummy_scalar, cmaparams);
+      return run_optimizer(cmaes, s_obj, lambda, dim, gp);
+    }
+    default:
+      Rf_error("Unknown CMA-ES variant specified.");
+  }
+}
 
 
 extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
@@ -68,14 +160,14 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   if (R_IsNA(sigma)) sigma = -1;
   int seed = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "seed")); 
   seed = (seed == NA_INTEGER) ? 0 : seed;
-    
  
   // init params and geno-pheno transform, with lin-scaling strategy
-  GenoPheno<pwqBoundStrategy, linScalingStrategy> gp(REAL(s_lower), REAL(s_upper), dim);
-  CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> cmaparams(dim, REAL(s_x0), sigma, lambda, seed, gp);
+  MyGenoPheno gp(REAL(s_lower), REAL(s_upper), dim);
+  MyCMAParameters cmaparams(dim, REAL(s_x0), sigma, lambda, seed, gp);
+  cmaparams.set_str_algo(RC_charscalar_as_string(RC_list_get_el_by_name(s_ctrl, "algo")));
 
   // set further params  
-  int max_fevals = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_fevals"));
+    int max_fevals = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_fevals"));
   if (max_fevals != NA_INTEGER) cmaparams.set_max_fevals(max_fevals); 
   int max_iter = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_iter"));
   if (max_iter != NA_INTEGER) cmaparams.set_max_iter(max_iter); 
@@ -84,57 +176,12 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   int max_restarts = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_restarts"));
   if (max_restarts != NA_INTEGER) cmaparams.set_restarts(max_restarts);
  
-  // dummy needed for constructer, we bypass it later
-  FitFunc dummy_scalar = [](const double*, int){ return 0.0; };
-  auto es = CMAStrategy<CovarianceUpdate, GenoPheno<pwqBoundStrategy, linScalingStrategy>>
-    (dummy_scalar, cmaparams);
   lambda = cmaparams.lambda();  // get lambda from cmaparams if we used -1 for defaults before
   Rprintf("seed: %d; lambda: %d; sigma: %f\n", seed, lambda, sigma);
 
-  SEXP s_x = RC_dblmat_create_PROTECT(lambda, dim); 
-
-  while (!es.stop()) {
-    dMat cands_x = es.ask();  // dim x lambda
-
-    // Rprintf("candidates (%ld x %ld):\n", cands_x.rows(), cands_x.cols());
-    for (int r=0; r<lambda; r++) {
-      dVec x = cands_x.col(r);
-      // Rprintf("x(%d): ", r);
-      // for (int i = 0; i < dim; i++) {
-      //   Rprintf("%f ", x(i));
-      // }
-      // Rprintf("\n");
-      // dVec xp = gp.pheno(x);
-      // Rprintf("x-pheno(%d): ", r);
-      // for (int i = 0; i < dim; i++) {
-      //   Rprintf("%f ", xp(i));
-      // }
-      // Rprintf("\n");
-    }
-
-    // trafo to pheno (!), copy to s_x and eval in R 
-    for (int r = 0; r < lambda; r++) {
-      dVec x = cands_x.col(r);
-      dVec xp = gp.pheno(x);
-      for (int i = 0; i < dim; i++) {
-        REAL(s_x)[i*lambda + r] = xp(i);
-      }
-    }
-    // Rprintf("s_x copied\n");
-    SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // on_err: unprotect s_x
-    CMASolutions &sols = es.get_solutions();
-    for (int r=0; r<sols.size(); r++) {
-      sols.get_candidate(r).set_x(cands_x.col(r));
-      sols.get_candidate(r).set_fvalue(REAL(s_y)[r]);
-    }
-    es.update_fevals(sols.size());
-    es.tell();     
-    es.inc_iter(); 
-    UNPROTECT(1); // s_y
-  }
+  CMASolutions sols = dispatch_optimizer(cmaparams, s_obj, lambda, dim, gp);
  
   // get best seen candidate and trafo to pheno (!)
-  const auto &sols = es.get_solutions();
   Candidate bcand = sols.get_best_seen_candidate();
   dVec best_x = gp.pheno(bcand.get_x_dvec()); 
 
@@ -147,7 +194,7 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   RC_list_set_el_dblscalar(s_res, 2, sols.edm());
   RC_list_set_el_dblscalar(s_res, 3, sols.elapsed_time() / 1000.0);
   RC_list_set_el_intscalar(s_res, 4, sols.run_status());
-  UNPROTECT(3); // s_x, s_res, s_res_x
+  UNPROTECT(2); // s_res, s_res_x
     
   return s_res;
 }

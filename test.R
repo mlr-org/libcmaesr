@@ -27,7 +27,8 @@ lower = rep(-1, dim)
 upper = rep(1, dim)
 lambda = 3
 fevals = 5000 * dim
-ctrl = cmaes_control(max_fevals = fevals, seed = 123, lambda = lambda)
+algo = "bipop"
+ctrl = cmaes_control(algo = algo, max_fevals = fevals, seed = 123, lambda = lambda)
 res = cmaes(fn, x0, lower, upper, ctrl)
 
 print(dim(eval_log))
