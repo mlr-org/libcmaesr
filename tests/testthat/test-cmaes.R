@@ -58,3 +58,25 @@ test_that("cmaes finds minimum of sphere function", {
   }
 })
 
+
+test_that("cmaes works with exception in objective", {
+  dim = 2
+  fn = function(x) stop("foo")
+
+  x0 = rep(0.5, dim)
+  lower = rep(-1, dim)
+  upper = rep(1, dim)
+  ctrl = cmaes_control(max_fevals = 10)#
+  expect_error({
+    withCallingHandlers(
+      capture.output(cmaes(fn, x0, lower, upper, ctrl)),
+      message = function(w) {
+        msg <<- w
+      }
+    )
+  }, regexp = "libcmaesr: objective evaluation failed!")
+  expect_string(msg, pattern = "foo")
+})
+
+
+
