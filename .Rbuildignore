@@ -17,3 +17,7 @@
 ^revdep$
 ^CRAN-SUBMISSION$
 .clangd
+^libcmaes$
+^.cursor$
+^.vscode$
+

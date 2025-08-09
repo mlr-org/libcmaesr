@@ -30,4 +30,3 @@ Language: en-US
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE, load = "installed")
 RoxygenNote: 7.3.2
-Collate: 'cmaes.R' 'zzz.R'
