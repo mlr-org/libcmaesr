@@ -16,6 +16,14 @@
 #' @param ftarget (`numeric(1)`)\cr 
 #'   Stop when this target function value is reached.
 #'   NA to disable.
+#' @param f_tolerance (`numeric(1)`)\cr 
+#'   Sets function tolerance as stopping criterion; 
+#'   monitors the difference in function value over iterations and 
+#'   stops optimization when below tolerance.
+#'   NA to disable.
+#' @param x_tolerance (`numeric(1)`)\cr 
+#'   Sets parameter tolerance as stopping criterion.
+#'   NA to disable.
 #' @param lambda (`integer(1)`)\cr 
 #'   Number of generated descendents per iteration.
 #'   Must be at least 2; NA to for default handling by libcmaes.
@@ -51,6 +59,7 @@
 #' @export
 cmaes_control = function(algo = "cmaes", 
   max_fevals = 100, max_iter = NA_integer_, ftarget = NA_real_,
+  f_tolerance = NA_real_, xtolerance = NA_real_,
   lambda = NA_integer_, sigma = NA_real_, max_restarts = NA_integer_,
   elitism = NA_integer_, tpa = NA_integer_, tpa_dsigma = NA_real_, 
   seed = NA_integer_) 
@@ -59,6 +68,8 @@ cmaes_control = function(algo = "cmaes",
   max_fevals = asInt(max_fevals, lower = 1, na.ok = TRUE)
   max_iter = asInt(max_iter, lower = 1, na.ok = TRUE)
   assert_number(ftarget, lower = 0, na.ok = TRUE)
+  assert_number(f_tolerance, lower = 0, na.ok = TRUE)
+  assert_number(x_tolerance, lower = 0, na.ok = TRUE)
   lambda = asInt(lambda, lower = 2, na.ok = TRUE)
   assert_number(sigma, lower = 0, na.ok = TRUE)
   max_restarts = asInt(max_restarts, lower = 0, na.ok = TRUE)
@@ -71,6 +82,8 @@ cmaes_control = function(algo = "cmaes",
     max_fevals = max_fevals,
     max_iter = max_iter,
     ftarget = ftarget,
+    f_tolerance = f_tolerance,
+    x_tolerance = x_tolerance,
     lambda = lambda,
     sigma = sigma,
     max_restarts = max_restarts,

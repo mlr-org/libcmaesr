@@ -174,6 +174,10 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   if (max_iter != NA_INTEGER) cmaparams.set_max_iter(max_iter); 
   double ftarget = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "ftarget"));
   if (!R_IsNA(ftarget)) cmaparams.set_ftarget(ftarget);
+  double f_tolerance = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "f_tolerance"));
+  if (!R_IsNA(f_tolerance)) cmaparams.set_f_tolerance(f_tolerance);
+  double x_tolerance = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "x_tolerance"));
+  if (!R_IsNA(x_tolerance)) cmaparams.set_xtolerance(x_tolerance);
   int max_restarts = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_restarts"));
   if (max_restarts != NA_INTEGER) cmaparams.set_restarts(max_restarts);
   int elitism = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "elitism"));
