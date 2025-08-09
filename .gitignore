@@ -12,6 +12,8 @@
 src/*.o
 src/*.so
 src/*.dll
+.Rhistory
+**/.Rhistory
 
 # symlink to libcmaes
 libcmaes
