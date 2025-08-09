@@ -15,5 +15,3 @@ src/*.dll
 .Rhistory
 **/.Rhistory
 
-# symlink to libcmaes
-libcmaes
