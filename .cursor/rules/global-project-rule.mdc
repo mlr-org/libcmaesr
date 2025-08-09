@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+
+The project writes a lightweight C/C++ wrapper around the c++ templated library libcmaes.
+We dont use RCPP.
+
+Respect the .lintr file for the generated R code.
+
+@.lintr
+
+
