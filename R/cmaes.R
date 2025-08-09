@@ -1,5 +1,9 @@
 #' @title CMA-ES Control Object
+#' 
 #' @description Create a control object for the CMA-ES algorithm.
+#' For more information on the parameters, see here: 
+#' \url{https://cma-es.github.io/libcmaes/doc/html/classlibcmaes_1_1CMAParameters.html}.
+#' 
 #' @param algo (`character(1)`)\cr 
 #'   The CMAES variant to use. 
 #'   Possible values are: [cmaes_algos].
@@ -21,6 +25,24 @@
 #' @param max_restarts (`integer(1)`)\cr 
 #'   The maximum number of restarts, for IPOP and BIPOP.
 #'   NA to for default handling by libcmaes.
+#' @param elitism (`integer(1)`)\cr 
+#'   Sets elitism:\cr 
+#'   \describe{
+#'   \item{0}{no elitism}
+#'   \item{1}{elitism: reinjects the best-ever seen solution}
+#'   \item{2}{initial elitism: reinject x0 as long as it is not improved upon}
+#'   \item{3}{initial elitism on restart: restart if best encountered solution is not 
+#'     the the final solution and reinjects the best solution until 
+#'     the population has better fitness, in its majority}
+#'   } 
+#'   NA to for default handling by libcmaes.
+#' @param tpa (`integer(1)`)\cr 
+#'   Activates / deactivates two-point adaptation step-size mechanism. 
+#'   0: no, 1: auto, 2: yes. 
+#'   NA to for default handling by libcmaes.
+#' @param tpa_dsigma (`numeric(1)`)\cr 
+#'   Sets tpa dsigma value, use with care.
+#'   NA to for default handling by libcmaes.
 #' @param seed (`integer(1)`)\cr 
 #'   The seed for the random number generator. If `NA`, the seed is set to 0.
 #'   NB: The RNG of the libcmaes if different to the one in R and is hence not subject to R's seeding.
@@ -30,6 +52,7 @@
 cmaes_control = function(algo = "cmaes", 
   max_fevals = 100, max_iter = NA_integer_, ftarget = NA_real_,
   lambda = NA_integer_, sigma = NA_real_, max_restarts = NA_integer_,
+  elitism = NA_integer_, tpa = NA_integer_, tpa_dsigma = NA_real_, 
   seed = NA_integer_) 
 {
   assert_choice(algo, cmaes_algos)
@@ -39,6 +62,9 @@ cmaes_control = function(algo = "cmaes",
   lambda = asInt(lambda, lower = 2, na.ok = TRUE)
   assert_number(sigma, lower = 0, na.ok = TRUE)
   max_restarts = asInt(max_restarts, lower = 0, na.ok = TRUE)
+  elitism = asInt(elitism, lower = 0, upper = 3, na.ok = TRUE)
+  tpa = asInt(tpa, lower = 0, upper = 2, na.ok = TRUE)
+  assert_number(tpa_dsigma, lower = 0, na.ok = TRUE)
   seed = asInt(seed, na.ok = TRUE)
   res = list(
     algo = algo,
@@ -48,6 +74,9 @@ cmaes_control = function(algo = "cmaes",
     lambda = lambda,
     sigma = sigma,
     max_restarts = max_restarts,
+    elitism = elitism,
+    tpa = tpa,
+    tpa_dsigma = tpa_dsigma,
     seed = seed
   )
   set_class(res, "cmaes_control")
@@ -81,6 +110,9 @@ cmaes_control = function(algo = "cmaes",
 #' 
 #' 5. Geno-Pheno tranformation is automatically applied, in the sense that we use the linear scaling
 #' to handle the bounds. 
+#' 
+#' 6. Setting gradients is currently not supported.
+#' 
 #' Read more deatils here: \url{https://github.com/CMA-ES/libcmaes/wiki/Defining-and-using-bounds-on-parameters}.
 #' 
 #' @param objective (`function(x)`)\cr

@@ -34,6 +34,7 @@ FIXME:
 - consider noisy case
 - look at surrogates
 - support unbounded problems
+- allow setting gradients
 
 
 */
@@ -175,7 +176,13 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   if (!R_IsNA(ftarget)) cmaparams.set_ftarget(ftarget);
   int max_restarts = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_restarts"));
   if (max_restarts != NA_INTEGER) cmaparams.set_restarts(max_restarts);
- 
+  int elitism = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "elitism"));
+  if (elitism != NA_INTEGER) cmaparams.set_elitism(elitism);
+  int tpa = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "tpa"));
+  if (tpa != NA_INTEGER) cmaparams.set_tpa(tpa);
+  double dsigma = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "dsigma"));
+  if (!R_IsNA(dsigma)) cmaparams.set_tpa_dsigma(dsigma);  
+
   lambda = cmaparams.lambda();  // get lambda from cmaparams if we used -1 for defaults before
   Rprintf("seed: %d; lambda: %d; sigma: %f\n", seed, lambda, sigma);
 
