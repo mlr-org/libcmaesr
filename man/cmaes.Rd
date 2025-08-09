@@ -59,14 +59,15 @@ need to be set by the user. The most common applications are model calibration (
 
 Whether you believe in this completely for any problem is up to you, but the general idea is to run it in its defauls,
 and only chnange them if you know what you are doing.
-
-#' 1. libcmaes could handle unbounded search spaces, but this is currently not supported, you need to set
-lower and upper bounds.
 \enumerate{
+\item libcmaes could handle unbounded search spaces, but this is currently not supported, you need to set
+lower and upper bounds.
 \item Noisy functions / noisy handling CMAES is currently not supported.
 \item Surrogate variants are currently not supported.
 \item Geno-Pheno tranformation is automatically applied, in the sense that we use the linear scaling
 to handle the bounds.
-Read more deatils here: \url{https://github.com/CMA-ES/libcmaes/wiki/Defining-and-using-bounds-on-parameters}.
+\item Setting gradients is currently not supported.
 }
+
+Read more deatils here: \url{https://github.com/CMA-ES/libcmaes/wiki/Defining-and-using-bounds-on-parameters}.
 }

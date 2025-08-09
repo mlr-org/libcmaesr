@@ -5,13 +5,27 @@
 \title{CMA-ES Control Object}
 \usage{
 cmaes_control(
-  algo = "aCMAES",
-  max_fevals = 10000,
-  max_iter = 100000,
-  ftarget = 1e-08
+  maximize = FALSE,
+  algo = "cmaes",
+  max_fevals = 100,
+  max_iter = NA_integer_,
+  ftarget = NA_real_,
+  f_tolerance = NA_real_,
+  x_tolerance = NA_real_,
+  lambda = NA_integer_,
+  sigma = NA_real_,
+  max_restarts = NA_integer_,
+  elitism = NA_integer_,
+  tpa = NA_integer_,
+  tpa_dsigma = NA_real_,
+  seed = NA_integer_
 )
 }
 \arguments{
+\item{maximize}{(\code{logical(1)})\cr
+Whether to maximize the objective function.
+Default is \code{FALSE}.}
+
 \item{algo}{(\code{character(1)})\cr
 The CMAES variant to use.
 Possible values are: \link{cmaes_algos}.}
@@ -28,6 +42,16 @@ NA to disable.}
 Stop when this target function value is reached.
 NA to disable.}
 
+\item{f_tolerance}{(\code{numeric(1)})\cr
+Sets function tolerance as stopping criterion;
+monitors the difference in function value over iterations and
+stops optimization when below tolerance.
+NA to disable.}
+
+\item{x_tolerance}{(\code{numeric(1)})\cr
+Sets parameter tolerance as stopping criterion.
+NA to disable.}
+
 \item{lambda}{(\code{integer(1)})\cr
 Number of generated descendents per iteration.
 Must be at least 2; NA to for default handling by libcmaes.}
@@ -40,6 +64,27 @@ NA to for default handling by libcmaes.}
 The maximum number of restarts, for IPOP and BIPOP.
 NA to for default handling by libcmaes.}
 
+\item{elitism}{(\code{integer(1)})\cr
+Sets elitism:\cr
+\describe{
+\item{0}{no elitism}
+\item{1}{elitism: reinjects the best-ever seen solution}
+\item{2}{initial elitism: reinject x0 as long as it is not improved upon}
+\item{3}{initial elitism on restart: restart if best encountered solution is not
+the the final solution and reinjects the best solution until
+the population has better fitness, in its majority}
+}
+NA to for default handling by libcmaes.}
+
+\item{tpa}{(\code{integer(1)})\cr
+Activates / deactivates two-point adaptation step-size mechanism.
+0: no, 1: auto, 2: yes.
+NA to for default handling by libcmaes.}
+
+\item{tpa_dsigma}{(\code{numeric(1)})\cr
+Sets tpa dsigma value, use with care.
+NA to for default handling by libcmaes.}
+
 \item{seed}{(\code{integer(1)})\cr
 The seed for the random number generator. If \code{NA}, the seed is set to 0.
 NB: The RNG of the libcmaes if different to the one in R and is hence not subject to R's seeding.
@@ -50,4 +95,6 @@ A cmaes_control S3 object, which is a list with the passed arguments.
 }
 \description{
 Create a control object for the CMA-ES algorithm.
+For more information on the parameters, see here:
+\url{https://cma-es.github.io/libcmaes/doc/html/classlibcmaes_1_1CMAParameters.html}.
 }

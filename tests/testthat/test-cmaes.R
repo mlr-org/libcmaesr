@@ -2,8 +2,8 @@ test_that("cmaes finds minimum of sphere function", {
   seed = 123
   # make sure to test the special case dim=1
   for (dim in 1:3) {
-    fevals = 500 * dim 
-    for (lambda in c(3 , 5, NA)) {
+    fevals = 500 * dim
+    for (lambda in c(3, 5, NA)) {
       for (algo in cmaes_algos) {
         # global log for all objective evaluations in this iteration
         eval_log <<- data.frame()
@@ -32,8 +32,7 @@ test_that("cmaes finds minimum of sphere function", {
         expect_list(res)
         expect_named(res, c("x", "y", "edm", "time", "status"), ignore.order = TRUE)
         expect_int(res$status, lower = 0)
-        print(res$x)
-        expect_true(all(abs(res$x) < 1e-3)) 
+        expect_true(all(abs(res$x) < 1e-3))
         # solution quality (should get very close to the optimum)
         expect_lt(res$y, 1e-6)
 
@@ -41,7 +40,7 @@ test_that("cmaes finds minimum of sphere function", {
         expect_gt(nrow(eval_log), 0)
         expect_equal(ncol(eval_log), dim + 1)  # dim cols for x + 1 for y
         if (is.na(lambda)) {
-          expect_lte(nrow(eval_log), fevals + 10) 
+          expect_lte(nrow(eval_log), fevals + 10)
         } else {
           expect_lte(nrow(eval_log), fevals + lambda) # last pop could be over fevals
         }
@@ -51,8 +50,8 @@ test_that("cmaes finds minimum of sphere function", {
 
         # all x-evaluations must be within [lower, upper]
         for (k in seq_len(dim)) {
-          expect_true(all(eval_x[,k] >= lower[k]))
-          expect_true(all(eval_x[,k] <= upper[k]))
+          expect_true(all(eval_x[, k] >= lower[k]))
+          expect_true(all(eval_x[, k] <= upper[k]))
         }
       }
     }
@@ -81,4 +80,18 @@ test_that("cmaes works with exception in objective", {
 })
 
 
-
+test_that("maximize works", {
+  fn = function(x) {
+    apply(x, 1, function(row) sum(row^2))
+  }
+  dim = 2
+  x0 = rep(0.5, dim)
+  lower = rep(-1, dim)
+  upper = rep(1, dim)
+  ctrl = cmaes_control(max_fevals =  500, maximize = TRUE)
+  res = cmaes(fn, x0, lower, upper, ctrl)
+  print(res)
+  expect_int(res$status, lower = 0)
+  expect_true(all(abs(res$x) > 0.999))
+  expect_gt(res$y, 1.9999)
+})
