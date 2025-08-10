@@ -8,7 +8,7 @@ You can install the development version from GitHub with:
 
 ```r
 # install.packages("devtools")
-devtools::install_github("berndbischl/libcmaesr")
+devtools::install_github("mlr-org/libcmaesr")
 ```
 
 ## Example
