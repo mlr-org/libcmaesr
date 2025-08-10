@@ -14,7 +14,6 @@ using MyCMAParameters = CMAParameters<MyGenoPheno>;
 FIXME:
 - cmaparams.set_x0(-3.0,3.0); // set x0 domain as [-3,3]^d where d is the dimension of the pro
 - look at and test multithreading
-- check and implement stop crits
 - check what happens if objectives uses wrong data typoes (input and output)
 - unit test some NA combos for ctrl params
 - show some progess and allow user interupt

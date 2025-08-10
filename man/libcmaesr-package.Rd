@@ -4,16 +4,15 @@
 \name{libcmaesr-package}
 \alias{libcmaesr}
 \alias{libcmaesr-package}
-\title{libcmaesr: Black-Box Optimization Toolkit}
+\title{libcmaesr: R Interface to 'libcmaes'}
 \description{
-Features highly configurable search spaces via the 'paradox' package and optimizes every user-defined objective function. The package includes several optimization algorithms e.g. Random Search, Iterated Racing, Bayesian Optimization (in 'mlr3mbo') and Hyperband (in 'mlr3hyperband'). bbotk is the base package of 'mlr3tuning', 'mlr3fselect' and 'miesmuschel'.
+A lightweight R interface to the 'libcmaes' C++ library for Covariance Matrix Adaptation Evolution Strategy (CMA-ES). It allows for the optimization of black-box functions using the CMA-ES algorithm and its variants. Includes a vendored copy of Eigen (MPL-2.0); see inst/COPYRIGHTS.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://bbotk.mlr-org.com}
-  \item \url{https://github.com/mlr-org/bbotk}
-  \item Report bugs at \url{https://github.com/mlr-org/bbotk/issues}
+  \item \url{https://github.com/berndbischl/libcmaesr}
+  \item Report bugs at \url{https://github.com/berndbischl/libcmaesr/issues}
 }
 
 }

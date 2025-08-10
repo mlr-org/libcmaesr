@@ -10,7 +10,7 @@ cmaes(objective, x0, lower, upper, control)
 \item{objective}{(\verb{function(x)})\cr
 Objective function, to minimize.
 \code{x} is a numeric matrix with \code{lambda} rows and \code{n} = dim-of-x columns.
-Evaluate them all in a batch fashion and return a numeric vector of length \code{n}.
+Evaluate them all in a batch fashion and return a numeric vector of length \code{lambda}.
 This usually reduced overhead and allows you to orchestrate parallelization
 yourself if you need it because the objective function is more expensive.}
 
@@ -38,7 +38,7 @@ Expected distance to the minimum.
 \item 'time': (\code{numeric(1)})\cr
 The time taken to find the solution in seconds.
 \item 'status': (\code{integer(1)})\cr
-The status code, indicating succes, failure, or the reason for stopping.
+The status code, indicating success, failure, or the reason for stopping.
 See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 }
 }
@@ -46,8 +46,9 @@ See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 Implements the CMA-ES variants provided by libcmaes, see here: \url{https://github.com/CMA-ES/libcmaes/} via
 a very light-weight C wrapper.
 
-2.The control structure allows access to most control params of the ES, but CMASES is supposed handle most of them internally.
-Quoting Niko Hansen from here:
+2.The control structure allows access to most control params of the ES, but CMAES is supposed to handle most of them internally.
+Quoting Niko Hansen from here: \url{https://cma-es.github.io/}:
+
 \dQuote{The CMA-ES does not require a tedious parameter tuning for its application. In fact, the choice of strategy internal parameters
 is not left to the user (arguably with the exception of population size λ). Finding good (default) strategy parameters is considered
 as part of the algorithm design, and not part of its application—the aim is to have a well-performing algorithm as is.
@@ -57,17 +58,17 @@ an initial standard deviation (step-size, variables should be defined such that 
 reasonably applied to all variables, see also here) and, possibly, the termination criteria (e.g. a function tolerance)
 need to be set by the user. The most common applications are model calibration (e.g. curve fitting) and shape optimisation.}
 
-Whether you believe in this completely for any problem is up to you, but the general idea is to run it in its defauls,
-and only chnange them if you know what you are doing.
+Whether you believe in this completely for any problem is up to you, but the general idea is to run it in its defaults,
+and only change them if you know what you are doing.
 \enumerate{
 \item libcmaes could handle unbounded search spaces, but this is currently not supported, you need to set
 lower and upper bounds.
 \item Noisy functions / noisy handling CMAES is currently not supported.
 \item Surrogate variants are currently not supported.
-\item Geno-Pheno tranformation is automatically applied, in the sense that we use the linear scaling
+\item Geno-Pheno transformation is automatically applied, in the sense that we use the linear scaling
 to handle the bounds.
 \item Setting gradients is currently not supported.
 }
 
-Read more deatils here: \url{https://github.com/CMA-ES/libcmaes/wiki/Defining-and-using-bounds-on-parameters}.
+Read more details here: \url{https://github.com/CMA-ES/libcmaes/wiki/Defining-and-using-bounds-on-parameters}.
 }

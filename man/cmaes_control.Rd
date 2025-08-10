@@ -54,15 +54,15 @@ NA to disable.}
 
 \item{lambda}{(\code{integer(1)})\cr
 Number of generated descendents per iteration.
-Must be at least 2; NA to for default handling by libcmaes.}
+Must be at least 2; NA for default handling by libcmaes.}
 
 \item{sigma}{(\code{numeric(1)})\cr
 Initial sigma for covariance.
-NA to for default handling by libcmaes.}
+NA for default handling by libcmaes.}
 
 \item{max_restarts}{(\code{integer(1)})\cr
 The maximum number of restarts, for IPOP and BIPOP.
-NA to for default handling by libcmaes.}
+NA for default handling by libcmaes.}
 
 \item{elitism}{(\code{integer(1)})\cr
 Sets elitism:\cr
@@ -74,21 +74,21 @@ Sets elitism:\cr
 the the final solution and reinjects the best solution until
 the population has better fitness, in its majority}
 }
-NA to for default handling by libcmaes.}
+NA for default handling by libcmaes.}
 
 \item{tpa}{(\code{integer(1)})\cr
 Activates / deactivates two-point adaptation step-size mechanism.
 0: no, 1: auto, 2: yes.
-NA to for default handling by libcmaes.}
+NA for default handling by libcmaes.}
 
 \item{tpa_dsigma}{(\code{numeric(1)})\cr
 Sets tpa dsigma value, use with care.
-NA to for default handling by libcmaes.}
+NA for default handling by libcmaes.}
 
 \item{seed}{(\code{integer(1)})\cr
 The seed for the random number generator. If \code{NA}, the seed is set to 0.
-NB: The RNG of the libcmaes if different to the one in R and is hence not subject to R's seeding.
-NA to for default handling by libcmaes, time is used in libcmaes to seed.}
+NB: The RNG of the libcmaes is different to the one in R and is hence not subject to R's seeding.
+NA for default handling by libcmaes, time is used in libcmaes to seed.}
 }
 \value{
 A cmaes_control S3 object, which is a list with the passed arguments.
