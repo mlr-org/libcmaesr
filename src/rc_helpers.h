@@ -9,6 +9,17 @@ extern "C" {
 #include <R.h>
 #include <Rinternals.h>
 
+// ********** debug prints **********
+
+// Debug printer system - can be switched on/off
+#define DEBUG_ENABLED 0  // Set to 1 to enable debug output
+
+#if DEBUG_ENABLED
+#define DEBUG_PRINT(fmt, ...) Rprintf(fmt, ##__VA_ARGS__)
+#else
+#define DEBUG_PRINT(fmt, ...) do {} while(0)
+#endif
+
 // ********** general **********
 
 // set class of arbitrary R object

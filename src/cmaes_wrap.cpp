@@ -74,7 +74,7 @@ CMASolutions dispatch_optimizer(MyCMAParameters& cmaparams, SEXP s_obj, int lamb
 
   // dummy needed for constructor, we bypass it later
   FitFunc dummy_scalar = [](const double*, int){ return 0.0; };
-  Rprintf("algo: %d\n", cmaparams.get_algo());
+  DEBUG_PRINT("algo: %d\n", cmaparams.get_algo());
   switch(cmaparams.get_algo()) {
     case CMAES_DEFAULT: {
       ESOptimizer<CMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
@@ -192,7 +192,7 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   if (!R_IsNA(dsigma)) cmaparams.set_tpa_dsigma(dsigma);
 
   lambda = cmaparams.lambda();  // get lambda from cmaparams if we used -1 for defaults before
-  Rprintf("seed: %d; lambda: %d; sigma: %f\n", seed, lambda, sigma);
+  DEBUG_PRINT("seed: %d; lambda: %d; sigma: %f\n", seed, lambda, sigma);
 
   CMASolutions sols = dispatch_optimizer(cmaparams, s_obj, lambda, dim, max_mult, gp);
 
