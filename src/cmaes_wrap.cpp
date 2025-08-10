@@ -1,7 +1,4 @@
-#include <libcmaes/cmaes.h>
-#include <libcmaes/genopheno.h>
-#include <libcmaes/pwq_bound_strategy.h>
-#include <libcmaes/scaling.h>
+#include "libcmaes/cmaes.h"
 #include <Eigen/Dense>
 #include "rc_helpers.h"
 
@@ -26,6 +23,7 @@ FIXME:
 - RC_helpers: add copy function for vecs and matrixes (rows, cols)
 - check restarts for ipop and bipop with some form of test
 - unit test maximize
+- need to figure out how to set eigen path in makevars
 
 - provide readme with install instrauctions and minimal example
 - do speed test vs 1-2 other packages and maybe perf test

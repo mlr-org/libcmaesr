@@ -1,19 +1,24 @@
-PKG_CPPFLAGS = -Ilibcmaes/include
+CXX_STD = CXX17
+PKG_CPPFLAGS = -Ilibcmaes/include -Ilibcmaes/build/include -I../inst/include
 PKG_LIBS = libcmaes/build/src/libcmaes.a
 
 $(SHLIB): $(PKG_LIBS)
 
 $(PKG_LIBS):
 	(cd libcmaes; \
-	  CC="$(CC)" CFLAGS="$(CFLAGS)" \
-	  CPPFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" \
+	  CXX="$(firstword $(CXX))" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" \
 	  cmake -S . -B build \
+      -DCMAKE_CXX_STANDARD=17 \
+	    -DCMAKE_CXX_FLAGS="$(CXXFLAGS)" \
+	    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 	    -DLIBCMAES_BUILD_SHARED_LIBS=OFF \
 	    -DLIBCMAES_BUILD_PYTHON=OFF \
 	    -DLIBCMAES_BUILD_EXAMPLES=OFF \
 	    -DLIBCMAES_ENABLE_SURROG=OFF \
 	    -DCMAKE_BUILD_TYPE=Release; \
 	  $(MAKE) -C build)
+
+$(OBJECTS): | $(PKG_LIBS)
 
 
 
