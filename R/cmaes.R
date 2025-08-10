@@ -29,13 +29,13 @@
 #'   NA to disable.
 #' @param lambda (`integer(1)`)\cr
 #'   Number of generated descendents per iteration.
-#'   Must be at least 2; NA to for default handling by libcmaes.
+#'   Must be at least 2; NA for default handling by libcmaes.
 #' @param sigma (`numeric(1)`)\cr
 #'   Initial sigma for covariance.
-#'   NA to for default handling by libcmaes.
+#'   NA for default handling by libcmaes.
 #' @param max_restarts (`integer(1)`)\cr
 #'   The maximum number of restarts, for IPOP and BIPOP.
-#'   NA to for default handling by libcmaes.
+#'   NA for default handling by libcmaes.
 #' @param elitism (`integer(1)`)\cr
 #'   Sets elitism:\cr
 #'   \describe{
@@ -46,18 +46,18 @@
 #'     the the final solution and reinjects the best solution until
 #'     the population has better fitness, in its majority}
 #'   }
-#'   NA to for default handling by libcmaes.
+#'   NA for default handling by libcmaes.
 #' @param tpa (`integer(1)`)\cr
 #'   Activates / deactivates two-point adaptation step-size mechanism.
 #'   0: no, 1: auto, 2: yes.
-#'   NA to for default handling by libcmaes.
+#'   NA for default handling by libcmaes.
 #' @param tpa_dsigma (`numeric(1)`)\cr
 #'   Sets tpa dsigma value, use with care.
-#'   NA to for default handling by libcmaes.
+#'   NA for default handling by libcmaes.
 #' @param seed (`integer(1)`)\cr
 #'   The seed for the random number generator. If `NA`, the seed is set to 0.
-#'   NB: The RNG of the libcmaes if different to the one in R and is hence not subject to R's seeding.
-#'   NA to for default handling by libcmaes, time is used in libcmaes to seed.
+#'   NB: The RNG of the libcmaes is different to the one in R and is hence not subject to R's seeding.
+#'   NA for default handling by libcmaes, time is used in libcmaes to seed.
 #' @return A cmaes_control S3 object, which is a list with the passed arguments.
 #' @export
 cmaes_control = function(maximize = FALSE, algo = "cmaes",
@@ -105,8 +105,9 @@ cmaes_control = function(maximize = FALSE, algo = "cmaes",
 #' Implements the CMA-ES variants provided by libcmaes, see here: \url{https://github.com/CMA-ES/libcmaes/} via
 #' a very light-weight C wrapper.
 #'
-#' 2.The control structure allows access to most control params of the ES, but CMASES is supposed handle most of them internally.
-#' Quoting Niko Hansen from here:
+#' 2.The control structure allows access to most control params of the ES, but CMAES is supposed to handle most of them internally.
+#' Quoting Niko Hansen from here: \url{https://cma-es.github.io/}:
+#'
 #' \dQuote{The CMA-ES does not require a tedious parameter tuning for its application. In fact, the choice of strategy internal parameters
 #' is not left to the user (arguably with the exception of population size λ). Finding good (default) strategy parameters is considered
 #' as part of the algorithm design, and not part of its application—the aim is to have a well-performing algorithm as is.
@@ -116,8 +117,8 @@ cmaes_control = function(maximize = FALSE, algo = "cmaes",
 #' reasonably applied to all variables, see also here) and, possibly, the termination criteria (e.g. a function tolerance)
 #' need to be set by the user. The most common applications are model calibration (e.g. curve fitting) and shape optimisation.}
 #'
-#' Whether you believe in this completely for any problem is up to you, but the general idea is to run it in its defauls,
-#' and only chnange them if you know what you are doing.
+#' Whether you believe in this completely for any problem is up to you, but the general idea is to run it in its defaults,
+#' and only change them if you know what you are doing.
 #'
 #' 1. libcmaes could handle unbounded search spaces, but this is currently not supported, you need to set
 #' lower and upper bounds.
@@ -126,17 +127,17 @@ cmaes_control = function(maximize = FALSE, algo = "cmaes",
 #'
 #' 3. Surrogate variants are currently not supported.
 #'
-#' 4. Geno-Pheno tranformation is automatically applied, in the sense that we use the linear scaling
+#' 4. Geno-Pheno transformation is automatically applied, in the sense that we use the linear scaling
 #' to handle the bounds.
 #'
 #' 5. Setting gradients is currently not supported.
 #'
-#' Read more deatils here: \url{https://github.com/CMA-ES/libcmaes/wiki/Defining-and-using-bounds-on-parameters}.
+#' Read more details here: \url{https://github.com/CMA-ES/libcmaes/wiki/Defining-and-using-bounds-on-parameters}.
 #'
 #' @param objective (`function(x)`)\cr
 #'   Objective function, to minimize.
 #'   `x` is a numeric matrix with `lambda` rows and `n` = dim-of-x columns.
-#'   Evaluate them all in a batch fashion and return a numeric vector of length `n`.
+#'   Evaluate them all in a batch fashion and return a numeric vector of length `lambda`.
 #'   This usually reduced overhead and allows you to orchestrate parallelization
 #'   yourself if you need it because the objective function is more expensive.
 #' @param x0 (`numeric(n)`)\cr
@@ -157,7 +158,7 @@ cmaes_control = function(maximize = FALSE, algo = "cmaes",
 #'   - 'time': (`numeric(1)`)\cr
 #'     The time taken to find the solution in seconds.
 #'   - 'status': (`integer(1)`)\cr
-#'     The status code, indicating succes, failure, or the reason for stopping.
+#'     The status code, indicating success, failure, or the reason for stopping.
 #'     See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 #' @useDynLib libcmaesr, .registration = TRUE
 #' @export

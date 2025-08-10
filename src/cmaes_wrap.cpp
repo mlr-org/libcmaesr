@@ -1,4 +1,7 @@
 #include <libcmaes/cmaes.h>
+#include <libcmaes/genopheno.h>
+#include <libcmaes/pwq_bound_strategy.h>
+#include <libcmaes/scaling.h>
 #include <Eigen/Dense>
 #include "rc_helpers.h"
 
@@ -40,7 +43,7 @@ FIXME:
 
 */
 
-// temmplated version of the main ask-tell loop, so we can run all templated CMA-ES variants
+// templated version of the main ask-tell loop, so we can run all templated CMA-ES variants
 template <typename Optimizer>
 CMASolutions run_optimizer(Optimizer& optimizer, SEXP s_obj, int lambda, int dim, double max_mult, const MyGenoPheno& gp) {
   SEXP s_x = RC_dblmat_create_PROTECT(lambda, dim);
@@ -69,13 +72,13 @@ CMASolutions run_optimizer(Optimizer& optimizer, SEXP s_obj, int lambda, int dim
   return optimizer.get_solutions();
 }
 
-// I see unfortunatly no way to do this without a switch statement, but at least we can use a template to run all variants
+// I see unfortunately no way to do this without a switch statement, but at least we can use a template to run all variants
 // inspired by libcmaes/cmaes.h
 CMASolutions dispatch_optimizer(MyCMAParameters& cmaparams, SEXP s_obj, int lambda, int dim,
   double max_mult, const MyGenoPheno& gp)
 {
 
-  // dummy needed for constructer, we bypass it later
+  // dummy needed for constructor, we bypass it later
   FitFunc dummy_scalar = [](const double*, int){ return 0.0; };
   Rprintf("algo: %d\n", cmaparams.get_algo());
   switch(cmaparams.get_algo()) {
@@ -191,7 +194,7 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
   if (elitism != NA_INTEGER) cmaparams.set_elitism(elitism);
   int tpa = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "tpa"));
   if (tpa != NA_INTEGER) cmaparams.set_tpa(tpa);
-  double dsigma = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "dsigma"));
+  double dsigma = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "tpa_dsigma"));
   if (!R_IsNA(dsigma)) cmaparams.set_tpa_dsigma(dsigma);
 
   lambda = cmaparams.lambda();  // get lambda from cmaparams if we used -1 for defaults before
@@ -199,7 +202,7 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
 
   CMASolutions sols = dispatch_optimizer(cmaparams, s_obj, lambda, dim, max_mult, gp);
 
-  // get best seen candidate and trafo to pheno (!)
+  // get best seen candidate and transform to pheno (!)
   Candidate bcand = sols.get_best_seen_candidate();
   dVec best_x = gp.pheno(bcand.get_x_dvec());
 

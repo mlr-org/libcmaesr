@@ -1,25 +1,18 @@
 Package: libcmaesr
-Title: Black-Box Optimization Toolkit
+Title: R Interface to 'libcmaes'
 Version: 0.1
 Authors@R: c(
     person("Marc", "Becker", , "marcbecker@posteo.de", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0002-8115-0400"))
   )
-Description: Features highly configurable search spaces via the 'paradox'
-    package and optimizes every user-defined objective function. The
-    package includes several optimization algorithms e.g. Random Search,
-    Iterated Racing, Bayesian Optimization (in 'mlr3mbo') and Hyperband
-    (in 'mlr3hyperband'). bbotk is the base package of 'mlr3tuning',
-    'mlr3fselect' and 'miesmuschel'.
+Description: A lightweight R interface to the 'libcmaes' C++ library for Covariance Matrix Adaptation Evolution Strategy (CMA-ES). It allows for the optimization of black-box functions using the CMA-ES algorithm and its variants.
 License: LGPL-3
-URL: https://bbotk.mlr-org.com, https://github.com/mlr-org/bbotk
-BugReports: https://github.com/mlr-org/bbotk/issues
+URL: https://github.com/berndbischl/libcmaesr
+BugReports: https://github.com/berndbischl/libcmaesr/issues
 Depends:
-    paradox (>= 1.0.0),
     R (>= 3.1.0)
 Imports:
     checkmate (>= 2.0.0),
-    methods,
     mlr3misc (>= 0.15.1)
 Suggests:
     testthat (>= 3.0.0)

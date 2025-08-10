@@ -15,7 +15,7 @@ extern "C" {
 void RC_set_class(SEXP s_obj, const char* class_name);
 // set names of arbitrary R object
 void RC_set_names(SEXP s_obj, int n, const char** names);
-// find name in R_NamesSymbol of arbitrary R object, 
+// find name in R_NamesSymbol of arbitrary R object,
 // return index of name, -1 if not found
 int RC_find_name(SEXP s_obj, const char *name);
 
@@ -70,7 +70,7 @@ SEXP RC_df_create_allnum_PROTECT(int n_rows, int n_cols, const char** colnames);
 // ********** R6 **********
 
 // get R6 member by name
-// will return R_UnboundValue when the symbol if symbol is not found in frame
+// will return R_UnboundValue when the symbol is not found in frame
 SEXP RC_r6_get_member(SEXP s_r6, const char* name);
 // set R6 member by name
 // will throw an error if the symbol is not found in frame
@@ -81,7 +81,7 @@ void RC_r6_set_member(SEXP s_r6, const char* name, SEXP s_value);
 // call R function with argument, return result, in simple R_tryEval
 // if error, unprotect nr of objects requested by user and throw error with msg
 // NB: dont use this if you need more complex cleanup / memory management on error!
-// except for the extra unprotect-on-error we assume nothhing more is needed / auto-cleaned-up
+// except for the extra unprotect-on-error we assume nothing more is needed / auto-cleaned-up
 SEXP RC_tryeval_PROTECT(SEXP s_fun, SEXP s_arg, const char* errmsg, int on_err_unprotect);
 
 
