@@ -8,7 +8,9 @@ CompileFlags:
     - -I/Applications/R.framework/Headers  # macOS
     - -I/usr/local/include
     - -I/usr/include
-    - -I/usr/include/eigen3
+    - -I../inst/include
+    - -Ilibcmaes/include
+    - -Ilibcmaes/build/include
     - -DR_BUILD
     - -DR_PACKAGE
     - -DHAVE_CONFIG_H

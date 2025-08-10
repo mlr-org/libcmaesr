@@ -1,4 +1,4 @@
-#include "libcmaes/cmaes.h"
+#include <libcmaes/cmaes.h>
 #include <Eigen/Dense>
 #include "rc_helpers.h"
 
@@ -12,7 +12,6 @@ using MyCMAParameters = CMAParameters<MyGenoPheno>;
 
 /*
 FIXME:
-- allow to set many thing in cmaes params
 - cmaparams.set_x0(-3.0,3.0); // set x0 domain as [-3,3]^d where d is the dimension of the pro
 - look at and test multithreading
 - check and implement stop crits
@@ -22,8 +21,6 @@ FIXME:
 - do proper debug printer and put it in rc-helpers
 - RC_helpers: add copy function for vecs and matrixes (rows, cols)
 - check restarts for ipop and bipop with some form of test
-- unit test maximize
-- need to figure out how to set eigen path in makevars
 
 - provide readme with install instrauctions and minimal example
 - do speed test vs 1-2 other packages and maybe perf test
