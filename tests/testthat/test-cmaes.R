@@ -179,3 +179,69 @@ test_that("elitism and tpa options run and return valid structure", {
     }
   }
 })
+
+
+# --- Restart behavior tests (IPOP/BIPOP) ---
+
+test_that("ipop restarts double lambda across restarts when budget allows", {
+  skip_on_cran()
+  dim = 2
+  seed = 42
+  # choose small initial lambda and budget to allow multiple restarts
+  init_lambda = 2L
+  max_restarts = 3L
+  # upper bound for possible evaluations: roughly sum of geometric series of lambdas * iters
+  fevals = 400
+
+  # log batch sizes seen by objective
+  batch_sizes <<- integer(0)
+  fn = function(x) {
+    batch_sizes <<- c(batch_sizes, nrow(x))
+    apply(x, 1, function(row) sum(row^2))
+  }
+
+  x0 = rep(0.5, dim)
+  lower = rep(-1, dim)
+  upper = rep(1, dim)
+  ctrl = cmaes_control(algo = "ipop", max_fevals = fevals, lambda = init_lambda,
+    max_restarts = max_restarts, seed = seed)
+  invisible(cmaes(fn, x0, lower, upper, ctrl))
+
+  # extract unique consecutive batch sizes to detect lambda changes
+  uniq_batches = batch_sizes[c(1, which(diff(batch_sizes) != 0) + 1)]
+  expect_gte(length(uniq_batches), 2)  # at least one restart should occur
+  # In IPOP, lambda should roughly double at each restart
+  if (length(uniq_batches) >= 3) {
+    expect_equal(uniq_batches[2], 2 * uniq_batches[1])
+    # allow last to be either doubled or capped by budget
+    expect_true(uniq_batches[3] %in% c(2 * uniq_batches[2], uniq_batches[2]))
+  }
+})
+
+
+test_that("bipop restarts vary lambda across restarts", {
+  skip_on_cran()
+  dim = 2
+  seed = 7
+  init_lambda = 2L
+  max_restarts = 4L
+  fevals = 400
+
+  batch_sizes <<- integer(0)
+  fn = function(x) {
+    batch_sizes <<- c(batch_sizes, nrow(x))
+    apply(x, 1, function(row) sum(row^2))
+  }
+
+  x0 = rep(0.5, dim)
+  lower = rep(-1, dim)
+  upper = rep(1, dim)
+  ctrl = cmaes_control(algo = "bipop", max_fevals = fevals, lambda = init_lambda,
+    max_restarts = max_restarts, seed = seed)
+  invisible(cmaes(fn, x0, lower, upper, ctrl))
+
+  uniq_batches = batch_sizes[c(1, which(diff(batch_sizes) != 0) + 1)]
+  expect_gte(length(uniq_batches), 2)
+  # BIPOP should not be strictly monotone doubling; expect at least two distinct values
+  expect_gt(length(unique(uniq_batches)), 1)
+})

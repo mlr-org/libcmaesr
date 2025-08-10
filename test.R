@@ -1,35 +1,37 @@
 library(devtools)
 library(roxygen2)
-document()
-roxygenize()
+# document()
+# roxygenize()
 load_all()
+seed = 1
+set.seed(seed)
 
-dim = 3
+dim = 100
 eval_log <<- data.frame()
+batch_sizes <<- integer(0)
 
 fn = function(x) {
-  if (!is.na(lambda)) {
-    assert_matrix(x, nrows = lambda, ncols = dim)
-  } else {
-    assert_matrix(x, ncols = dim)
-  }
-  ys = apply(x, 1, function(row) sum(row^2))
-  # append the current evaluation batch to the global log
+  n = ncol(x)
+  ys = 10 * n + rowSums(x^2 - 10 * cos(2 * pi * x))
   df = as.data.frame(x)
   names(df) = sprintf("x%d", seq_len(dim))
   df$y = ys
   eval_log <<- rbind(eval_log, df)
+  batch_sizes <<- c(batch_sizes, nrow(x))
+  print(sum(batch_sizes))
   ys
 }
 
-x0 = rep(0.5, dim)
-lower = rep(-1, dim)
-upper = rep(1, dim)
-lambda = 3
-fevals = 5000 * dim
-algo = "bipop"
-ctrl = cmaes_control(algo = algo, max_fevals = fevals, seed = 123, lambda = lambda)
-res = cmaes(fn, x0, lower, upper, ctrl)
+max_restarts = 3L
+fevals = 500
 
-print(dim(eval_log))
-print(res)
+
+x0 = rep(3, dim)
+lower = rep(-5.12, dim)
+upper = rep(5.12, dim)
+ctrl = cmaes_control(algo = "bipop", max_fevals = fevals,
+  max_restarts = max_restarts, seed = seed)
+z = cmaes(fn, x0, lower, upper, ctrl)
+print(unique(batch_sizes))
+print(z)
+

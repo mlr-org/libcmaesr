@@ -10,6 +10,8 @@
 #' @param algo (`character(1)`)\cr
 #'   The CMAES variant to use.
 #'   Possible values are: [cmaes_algos].
+#'   Default is "acmaes", as recommended by
+#'   \url{https://github.com/CMA-ES/libcmaes/wiki/Practical-hints}.
 #' @param max_fevals (`integer(1)`)\cr
 #'   The maximum number of function evaluations.
 #'   NA to disable.
@@ -60,7 +62,7 @@
 #'   NA for default handling by libcmaes, time is used in libcmaes to seed.
 #' @return A cmaes_control S3 object, which is a list with the passed arguments.
 #' @export
-cmaes_control = function(maximize = FALSE, algo = "cmaes",
+cmaes_control = function(maximize = FALSE, algo = "acmaes",
   max_fevals = 100, max_iter = NA_integer_, ftarget = NA_real_,
   f_tolerance = NA_real_, x_tolerance = NA_real_,
   lambda = NA_integer_, sigma = NA_real_, max_restarts = NA_integer_,
