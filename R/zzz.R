@@ -19,8 +19,8 @@ cmaes_algos = c(
   "sepipop",
   "sepbipop",
   "sepacmaes",
-  "sepaipop",
-  "sepabipop",
+  "sepipop",
+  "sepbipop",
   "vdcma",
   "vdipopcma",
   "vdbipopcma"
