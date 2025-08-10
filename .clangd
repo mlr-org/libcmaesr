@@ -17,7 +17,14 @@ CompileFlags:
 # The --- separates documents.
 # The following is a new configuration document.
 If:
-  PathMatch: /usr/local/include/libcmaes/.*
+  PathMatch: src/libcmaes/include/.*
+Index:
+  Background: Skip
+Diagnostics:
+  Suppress: "*"
+---
+If:
+  PathMatch: .*/inst/COPYRIGHTS$
 Index:
   Background: Skip
 Diagnostics:

@@ -19,16 +19,17 @@ This is a basic example which shows you how to solve a common test problem, the 
 library(libcmaesr)
 
 # define objective function
-sphere = function(x) {
-  sum(x^2)
+dim = 3
+fn = function(x) {
+  apply(x, 1, function(row) sum(row^2))
 }
 
-# define search space
-lower = rep(-5, 2)
-upper = rep(5, 2)
-x0 = rep(1, 2)
-
-# run optimization
-res = cmaes(sphere, x0, lower, upper, cmaes_control())
+x0 = rep(0.5, dim)
+lower = rep(-1, dim)
+upper = rep(1, dim)
+fevals = 5000 * dim
+algo = "bipop"
+ctrl = cmaes_control(algo = algo, max_fevals = fevals, seed = 123, lambda = lambda)
+res = cmaes(fn, x0, lower, upper, ctrl)
 print(res)
 ```
