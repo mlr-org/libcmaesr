@@ -17,7 +17,11 @@
 ^revdep$
 ^CRAN-SUBMISSION$
 .clangd
-^libcmaes$
+^src/libcmaes/build$
+^src/libcmaes/.git$
+^src/libcmaes/.travis.yml$
+^src/libcmaes/.github$
+^cpp-tests$
 ^.cursor$
 ^.vscode$
 
