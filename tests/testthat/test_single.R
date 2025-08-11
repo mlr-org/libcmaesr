@@ -171,3 +171,32 @@ test_that("single: elitism and tpa options run and return valid structure", {
     }
   }
 })
+
+
+test_that("ipop/bipop non-batch logs show multiple restarts when budget allows", {
+  library(callr)
+  for (algo in c("ipop", "bipop")) {
+    p = r_bg(
+      function(algo) {
+        library(libcmaesr)
+        dim = 2
+        fn = function(x) sum(x^2)
+        x0 = rep(0.5, dim)
+        lower = rep(-1, dim)
+        upper = rep(1, dim)
+        ctrl = cmaes_control(algo = algo, max_fevals = 300, max_iter = 10, lambda = 2,
+          max_restarts = 3, seed = 123, quiet = FALSE)
+        cmaes(fn, x0, lower, upper, ctrl, batch = FALSE)
+      },
+      args = list(algo = algo)
+    )
+    p$wait()
+    res = p$get_result()
+    expect_named(res, c("x", "y", "edm", "time", "status"), ignore.order = TRUE)
+    expect_integer(res$status, lower = 0, len = 1)
+    out = p$read_output()
+    n_restart = length(gregexpr("restart", out, ignore.case = TRUE)[[1]])
+    expect_gte(n_restart, 2)  # should indicate multiple restarts in logs
+  }
+})
+

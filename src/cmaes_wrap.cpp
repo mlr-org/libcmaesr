@@ -21,11 +21,8 @@ FIXME:
 - look at and test multithreading
 - check what happens if objectives uses wrong data typoes (input and output)
 - unit test some NA combos for ctrl params
-- RC_helpers: add copy function for vecs and matrixes (rows, cols)
 - add lic etc for libcmaes
 - check if we can make teh cache eval faster
-- check restarts for ipop and bipop with some form of test
-- reenable restart tests in test_batch.R
 
 - at least bipop seems to not respect max_fevals, opened an issue
 - provide readme with install instrauctions and minimal example
