@@ -22,13 +22,12 @@ FIXME:
 - check what happens if objectives uses wrong data typoes (input and output)
 - unit test some NA combos for ctrl params
 - RC_helpers: add copy function for vecs and matrixes (rows, cols)
-- check restarts for ipop and bipop with some form of test
 - add lic etc for libcmaes
-- at least bipop seems to not respect max_fevals, opened an issue
-- create option to see libcmaes log output
 - check if we can make teh cache eval faster
+- check restarts for ipop and bipop with some form of test
 - reenable restart tests in test_batch.R
 
+- at least bipop seems to not respect max_fevals, opened an issue
 - provide readme with install instrauctions and minimal example
 - do speed test vs 1-2 other packages and maybe perf test
 - run R cmd check
@@ -55,10 +54,7 @@ static double cached_fitfunc_impl(const double *x, int dim) {
   } else {
     DEBUG_PRINT("cached_fitfunc_impl: not found\n");
     // create matrix with 1 row and eval in R
-    SEXP s_x = RC_dblmat_create_PROTECT(1, dim);
-    for (int i = 0; i < dim; ++i) {
-      REAL(s_x)[i] = x[i];
-    }
+    SEXP s_x = RC_dblmat_create_init_PROTECT(1, dim, x);
     SEXP s_y = RC_tryeval_PROTECT(G_OBJ, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
     UNPROTECT(2); // s_x, s_y
     return REAL(s_y)[0];
@@ -74,11 +70,12 @@ static CMASolutions run_with_batch_eval(Strategy &strat, SEXP s_obj) {
 
     // create lambda x dim matrix for R objective, fill with phenotype
     SEXP s_x = RC_dblmat_create_PROTECT(lambda, dim);
-    for (int r = 0; r < lambda; ++r) {
-      for (int i = 0; i < dim; ++i) {
-        REAL(s_x)[i * lambda + r] = phenocands(i, r);
-      }
-    }
+
+    // Column-major map over R memory, unaligned for safety
+    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>, Eigen::Unaligned>
+        X(REAL(s_x), lambda, dim);
+    // Transpose phenocands (dim x lambda) into X (lambda x dim)
+    X = phenocands.transpose();
 
     // call R once on the whole batch
     SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
@@ -243,7 +240,7 @@ SEXP create_SEXP_result(CMASolutions& sols, MyGenoPheno& gp, MyCMAParameters& cm
     SET_VECTOR_ELT(s_res, 0, s_res_x);
     RC_list_set_el_dblscalar(s_res, 1, best_y);
     RC_list_set_el_dblscalar(s_res, 2, sols.edm());
-    RC_list_set_el_dblscalar(s_res, 3, sols.elapsed_time() / 1000.0);
+    RC_list_set_el_dblscalar(s_res, 3, sols.elapsed_time() / 1000.0); // in secs
     RC_list_set_el_intscalar(s_res, 4, sols.run_status());
     UNPROTECT(2); // s_res, s_res_x
     return s_res;
@@ -257,13 +254,10 @@ extern "C" SEXP c_cmaes_wrap_single(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_
   // scalar fitfunc, simple case
   FitFunc func = [&](const double *x, const int &n) -> double {
     // setup R dbl vec, copy, eval, return
-    SEXP s_x = RC_dblvec_create_PROTECT(n);
-    for (int i = 0; i < n; ++i)
-      REAL(s_x)[i] = x[i];
+    SEXP s_x = RC_dblvec_create_init_PROTECT(n, x);
     SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
-    double val = REAL(s_y)[0];
     UNPROTECT(2); // s_x, s_y
-    return val;
+    return Rf_asReal(s_y);
   };
 
   // now run via libcmaes::cmaes servive fun, easy

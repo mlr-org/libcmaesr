@@ -41,17 +41,25 @@ SEXP RC_dblscalar_create_PROTECT(double k);
 
 // ********** vectors **********
 
-// create integer vector
+// create SEXP vector
 SEXP RC_intvec_create_PROTECT(int n);
-// create double vector
 SEXP RC_dblvec_create_PROTECT(int n);
+
 // create double vector with initial values
 SEXP RC_dblvec_create_init_PROTECT(int n, const double *values);
+
+// copy to SEXP
+void RC_intvec_copy_to_SEXP(const int *x, int n, SEXP s_res);
+void RC_dblvec_copy_to_SEXP(const double *x, int n, SEXP s_res);
 
 // ********** matrices **********
 
 // create double matrix
 SEXP RC_dblmat_create_PROTECT(int n_rows, int n_cols);
+// create double matrix with initial values
+// NB: the data in x has to be in COLUMN-MAJOR ORDER
+SEXP RC_dblmat_create_init_PROTECT(int n_rows, int n_cols, const double *x);
+
 
 // ********** list **********
 

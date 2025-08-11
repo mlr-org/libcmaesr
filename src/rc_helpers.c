@@ -8,7 +8,7 @@ void RC_set_class(SEXP s_obj, const char* class_name) {
   SET_STRING_ELT(s_attr, 0, Rf_mkChar(class_name));
   Rf_setAttrib(s_obj, R_ClassSymbol, s_attr);
   UNPROTECT(1); // s_attr
-} 
+}
 
 void RC_set_names(SEXP s_obj, int n, const char** names) {
   SEXP s_names = PROTECT(Rf_allocVector(STRSXP, n));
@@ -31,8 +31,8 @@ int RC_find_name(SEXP s_obj, const char *name) {
 
 // ********** scalars **********
 
-const char *RC_charscalar_as_string(SEXP s_x) { 
-  return CHAR(STRING_ELT(s_x, 0)); 
+const char *RC_charscalar_as_string(SEXP s_x) {
+  return CHAR(STRING_ELT(s_x, 0));
 }
 
 SEXP RC_intscalar_create_PROTECT(int k) {
@@ -45,6 +45,8 @@ SEXP RC_dblscalar_create_PROTECT(double k) {
 
 // ********** vectors **********
 
+// create
+
 SEXP RC_intvec_create_PROTECT(int n) {
   return PROTECT(Rf_allocVector(INTSXP, n));
 }
@@ -53,10 +55,28 @@ SEXP RC_dblvec_create_PROTECT(int n) {
   return PROTECT(Rf_allocVector(REALSXP, n));
 }
 
+// create + init
+
+SEXP RC_intvec_create_init_PROTECT(int n, const int *values) {
+  SEXP s_res = PROTECT(Rf_allocVector(INTSXP, n));
+  memcpy(INTEGER(s_res), values, n * sizeof(int));
+  return s_res;
+}
+
 SEXP RC_dblvec_create_init_PROTECT(int n, const double *values) {
   SEXP s_res = PROTECT(Rf_allocVector(REALSXP, n));
   memcpy(REAL(s_res), values, n * sizeof(double));
-  return s_res; 
+  return s_res;
+}
+
+// copy to SEXP
+
+void RC_intvec_copy_to_SEXP(const int *x, int n, SEXP s_res) {
+  memcpy(INTEGER(s_res), x, n * sizeof(int));
+}
+
+void RC_dblvec_copy_to_SEXP(const double *x, int n, SEXP s_res) {
+  memcpy(REAL(s_res), x, n * sizeof(double));
 }
 
 // ********** matrices **********
@@ -64,6 +84,13 @@ SEXP RC_dblvec_create_init_PROTECT(int n, const double *values) {
 SEXP RC_dblmat_create_PROTECT(int n_rows, int n_cols) {
   return PROTECT(Rf_allocMatrix(REALSXP, n_rows, n_cols));
 }
+
+SEXP RC_dblmat_create_init_PROTECT(int n_rows, int n_cols, const double *x) {
+  SEXP s_x = PROTECT(Rf_allocMatrix(REALSXP, n_rows, n_cols));
+  memcpy(REAL(s_x), x, n_rows * n_cols * sizeof(double));
+  return s_x;
+}
+
 
 // ********** list **********
 
@@ -131,7 +158,7 @@ SEXP RC_df_create_allnum_nocolnames_PROTECT(int n_rows, int n_cols) {
   }
   Rf_setAttrib(s_res, R_RowNamesSymbol, s_row_names);
   UNPROTECT(1); // s_row_names
-  
+
   return s_res;
 }
 
