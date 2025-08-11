@@ -200,3 +200,18 @@ test_that("ipop/bipop non-batch logs show multiple restarts when budget allows",
   }
 })
 
+test_that("single: x0 randomization accepts vector bounds and runs", {
+  dim = 2
+  obj = make_logged_sphere_single(dim, lambda = NA)
+  # use very small interval for x0 and nearly sigma=0
+  # so all initial points should be in this interval
+  x0_lower = c(0.2, -0.2)
+  x0_upper = c(0.3, -0.1)
+  lambda = 10
+  ctrl = cmaes_control(max_fevals = 10L, seed = 999, sigma = 1e-6, lambda = lambda,
+    x0_lower = x0_lower, x0_upper = x0_upper)
+  res = cmaes(obj$fn, obj$x0, obj$lower, obj$upper, ctrl, batch = FALSE)
+  ee = eval_log
+  expect_true(all(ee$x1 >= x0_lower[1] & ee$x1 <= x0_upper[1]))
+})
+

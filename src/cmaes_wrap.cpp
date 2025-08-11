@@ -37,7 +37,6 @@ FIXME:
 - support unbounded problems
 - allow setting gradients
 
-
 */
 
 // FitFunc that looks up precomputed fvalues from the cache; falls back to single-point R eval
@@ -215,7 +214,11 @@ std::pair<MyCMAParameters, MyGenoPheno> cmaes_setup(SEXP s_x0, SEXP s_lower, SEX
     if (!R_IsNA(dsigma)) cmaparams.set_tpa_dsigma(dsigma);
     bool quiet = Rf_asLogical(RC_list_get_el_by_name(s_ctrl, "quiet"));
     cmaparams.set_quiet(quiet);
-
+    SEXP s_x0_lower = RC_list_get_el_by_name(s_ctrl, "x0_lower");
+    SEXP s_x0_upper = RC_list_get_el_by_name(s_ctrl, "x0_upper");
+    if (s_x0_lower != R_NilValue && s_x0_upper != R_NilValue) {
+      cmaparams.set_x0(REAL(s_x0_lower), REAL(s_x0_upper));
+    }
     DEBUG_PRINT("cmaes_setup: done\n");
 
     return std::make_pair(cmaparams, gp);

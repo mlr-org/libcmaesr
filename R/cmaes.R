@@ -65,6 +65,14 @@
 #'   NB: This does not trigger proper R printing, but the internal libcmaes printer,
 #'   use with care, usually we dont want this. Useful for debugging.
 #'   Default is `TRUE`.
+#' @param x0_lower (`numeric(1)`)\cr
+#'   Optional lower bounds for randomizing the initial mean `x0`,
+#'   also after restarts.
+#'   Use `NULL` to disable.
+#' @param x0_upper (`numeric(1)`)\cr
+#'   Optional upper bounds for randomizing the initial mean `x0`,
+#'   also after restarts.
+#'   Use `NULL` to disable.
 #' @return A cmaes_control S3 object, which is a list with the passed arguments.
 #'
 #' @export
@@ -73,7 +81,8 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
   f_tolerance = NA_real_, x_tolerance = NA_real_,
   lambda = NA_integer_, sigma = NA_real_, max_restarts = NA_integer_,
   elitism = NA_integer_, tpa = NA_integer_, tpa_dsigma = NA_real_,
-  seed = NA_integer_, quiet = TRUE) {
+  seed = NA_integer_, quiet = TRUE,
+  x0_lower = NULL, x0_upper = NULL) {
 
   assert_flag(maximize)
   assert_choice(algo, cmaes_algos)
@@ -90,6 +99,8 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
   assert_number(tpa_dsigma, lower = 0, na.ok = TRUE)
   seed = asInt(seed, na.ok = TRUE)
   assert_flag(quiet)
+  assert_numeric(x0_lower, min.len = 1, any.missing = FALSE, finite = TRUE, null.ok = TRUE)
+  assert_numeric(x0_upper, min.len = 1, any.missing = FALSE, finite = TRUE, null.ok = TRUE)
   res = list(
     maximize = maximize,
     algo = algo,
@@ -105,7 +116,9 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
     tpa = tpa,
     tpa_dsigma = tpa_dsigma,
     seed = seed,
-    quiet = quiet
+    quiet = quiet,
+    x0_lower = x0_lower,
+    x0_upper = x0_upper
   )
   set_class(res, "cmaes_control")
 }
@@ -152,6 +165,7 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
 #'   yourself if you need it because the objective function is more expensive.
 #' @param x0 (`numeric(n)`)\cr
 #'   Initial point.
+#'   NB: This point is IGNORED if you also set `x0_lower` and `x0_upper`!
 #' @param lower (`numeric(n)`)\cr
 #'   Lower bounds of search space.
 #' @param upper (`numeric(n)`)\cr
@@ -177,9 +191,11 @@ cmaes = function(objective, x0, lower, upper, control, batch = FALSE) {
   assert_numeric(x0, min.len = 1, any.missing = FALSE, finite = TRUE)
   assert_numeric(lower, min.len = 1, any.missing = FALSE, finite = TRUE)
   assert_numeric(upper, min.len = 1, any.missing = FALSE, finite = TRUE)
-  assert_numeric(x0, min.len = 1)
-  if (length(lower) != length(x0) || length(upper) != length(x0)) {
-    stop("'x0', 'lower', 'upper' must all have the same length!")
+  assert_class(control, "cmaes_control")
+  assert_flag(batch)
+
+  if (length(x0) != length(lower) || length(x0) != length(upper)) {
+    stop("'x0', 'lower' and 'upper' must have the same length!")
   }
   if (!all(lower < upper)) {
     stop("'lower' must be strictly smaller than 'upper'!")
@@ -187,7 +203,23 @@ cmaes = function(objective, x0, lower, upper, control, batch = FALSE) {
   if (!all(x0 > lower) || !all(x0 < upper)) {
     stop("'x0' must be strictly between 'lower' and 'upper'!")
   }
-  assert_class(control, "cmaes_control")
+
+  if (!is.null(control$x0_lower) && length(control$x0_lower) != length(lower)) {
+      stop("'x0_lower' must have the same length as 'lower'!")
+  }
+  if (!is.null(control$x0_upper) && length(control$x0_upper) != length(upper)) {
+      stop("'x0_upper' must have the same length as 'upper'!")
+  }
+  if (!all(control$x0_lower < control$x0_upper)) {
+    stop("'x0_lower' must be strictly smaller than 'x0_upper'!")
+  }
+  if (!all(control$x0_upper < upper)) {
+    stop("'x0_upper' must be strictly smaller than 'upper'!")
+  }
+  if (!all(control$x0_lower > lower)) {
+    stop("'x0_lower' must be strictly larger than 'lower'!")
+  }
+
   if (batch) {
     .Call("c_cmaes_wrap_batch", objective, x0, lower, upper, control, PACKAGE = "libcmaesr")
   } else {
