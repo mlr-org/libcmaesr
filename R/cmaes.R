@@ -60,14 +60,20 @@
 #'   The seed for the random number generator. If `NA`, the seed is set to 0.
 #'   NB: The RNG of the libcmaes is different to the one in R and is hence not subject to R's seeding.
 #'   NA for default handling by libcmaes, time is used in libcmaes to seed.
+#' @param quiet (`logical(1)`)\cr
+#'   Whether to suppress libcmaes output.
+#'   NB: This does not trigger proper R printing, but the internal libcmaes printer,
+#'   use with care, usually we dont want this. Useful for debugging.
+#'   Default is `TRUE`.
 #' @return A cmaes_control S3 object, which is a list with the passed arguments.
+#'
 #' @export
 cmaes_control = function(maximize = FALSE, algo = "acmaes",
   max_fevals = 100, max_iter = NA_integer_, ftarget = NA_real_,
   f_tolerance = NA_real_, x_tolerance = NA_real_,
   lambda = NA_integer_, sigma = NA_real_, max_restarts = NA_integer_,
   elitism = NA_integer_, tpa = NA_integer_, tpa_dsigma = NA_real_,
-  seed = NA_integer_) {
+  seed = NA_integer_, quiet = TRUE) {
 
   assert_flag(maximize)
   assert_choice(algo, cmaes_algos)
@@ -83,6 +89,7 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
   tpa = asInt(tpa, lower = 0, upper = 2, na.ok = TRUE)
   assert_number(tpa_dsigma, lower = 0, na.ok = TRUE)
   seed = asInt(seed, na.ok = TRUE)
+  assert_flag(quiet)
   res = list(
     maximize = maximize,
     algo = algo,
@@ -97,7 +104,8 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
     elitism = elitism,
     tpa = tpa,
     tpa_dsigma = tpa_dsigma,
-    seed = seed
+    seed = seed,
+    quiet = quiet
   )
   set_class(res, "cmaes_control")
 }

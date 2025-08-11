@@ -20,12 +20,11 @@ FIXME:
 - look at and test multithreading
 - check what happens if objectives uses wrong data typoes (input and output)
 - unit test some NA combos for ctrl params
-- show some progess and allow user interupt
-- do proper debug printer and put it in rc-helpers
 - RC_helpers: add copy function for vecs and matrixes (rows, cols)
 - check restarts for ipop and bipop with some form of test
 - add lic etc for libcmaes
 - at least bipop seems to not respect max_fevals, opened an issue
+- create option to see libcmaes log output
 
 - provide readme with install instrauctions and minimal example
 - do speed test vs 1-2 other packages and maybe perf test
@@ -45,10 +44,10 @@ FIXME:
 
 // FitFunc that looks up precomputed fvalues from the cache; falls back to single-point R eval
 static double cached_fitfunc_impl(const double *x, const int &n) {
-    // FIXME can we make this faster?
-    auto it = G_EVAL_CACHE.find(x);
-    if (it != G_EVAL_CACHE.end()) return it->second;
-    return std::numeric_limits<double>::quiet_NaN();
+  // FIXME can we make this faster?
+  auto it = G_EVAL_CACHE.find(x);
+  if (it != G_EVAL_CACHE.end()) return it->second;
+  return std::numeric_limits<double>::quiet_NaN();
 }
 
 // run strategy with a custom EvalFunc that batch-evaluates the population in R
@@ -187,6 +186,7 @@ std::pair<MyCMAParameters, MyGenoPheno> cmaes_setup(SEXP s_x0, SEXP s_lower, SEX
 
     // set further params
     cmaparams.set_maximize(Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "maximize")));
+    cmaparams.set_str_algo(RC_charscalar_as_string(RC_list_get_el_by_name(s_ctrl, "algo")));
     int max_fevals = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_fevals"));
     if (max_fevals != NA_INTEGER) cmaparams.set_max_fevals(max_fevals);
     int max_iter = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_iter"));
@@ -205,6 +205,8 @@ std::pair<MyCMAParameters, MyGenoPheno> cmaes_setup(SEXP s_x0, SEXP s_lower, SEX
     if (tpa != NA_INTEGER) cmaparams.set_tpa(tpa);
     double dsigma = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "tpa_dsigma"));
     if (!R_IsNA(dsigma)) cmaparams.set_tpa_dsigma(dsigma);
+    bool quiet = Rf_asLogical(RC_list_get_el_by_name(s_ctrl, "quiet"));
+    cmaparams.set_quiet(quiet);
 
     DEBUG_PRINT("cmaes_setup: done\n");
 
@@ -236,8 +238,6 @@ SEXP create_SEXP_result(CMASolutions& sols, MyGenoPheno& gp, MyCMAParameters& cm
 extern "C" SEXP c_cmaes_wrap_single(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
 
   auto [cmaparams, gp] = cmaes_setup(s_x0, s_lower, s_upper, s_ctrl);
-  // set str_algo, in batch mode we manually dispatch to the right strategy
-  cmaparams.set_str_algo(RC_charscalar_as_string(RC_list_get_el_by_name(s_ctrl, "algo")));
 
   // scalar fitfunc, simple case
   FitFunc func = [&](const double *x, const int &n) -> double {

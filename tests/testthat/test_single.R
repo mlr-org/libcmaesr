@@ -77,7 +77,7 @@ test_that("single: works with exception in objective", {
   msg = capture.output(type = "message", {
     x = capture.output(type = "output", {
       expect_error({
-        cmaes(fn, x0, lower, upper, ctrl)
+        cmaes(fn, x0, lower, upper, ctrl, batch = FALSE)
       }, regexp = "libcmaesr: objective evaluation failed!")
     })
   })
