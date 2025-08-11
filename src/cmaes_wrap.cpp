@@ -21,7 +21,6 @@ FIXME:
 - look at and test multithreading
 - check what happens if objectives uses wrong data typoes (input and output)
 - unit test some NA combos for ctrl params
-- add lic etc for libcmaes
 - check if we can make teh cache eval faster
 
 - at least bipop seems to not respect max_fevals, opened an issue

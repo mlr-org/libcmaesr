@@ -520,3 +520,12 @@ License: MPL-2
     .
     This Source Code Form is "Incompatible With Secondary Licenses", as
     defined by the Mozilla Public License, v. 2.0.
+
+Files: src/libcmaes/*
+Copyright: 2013-2020 Emmanuel Benazera
+License: LGPL-3+
+Comment: This package vendors the C++ library 'libcmaes' for CMA-ES (see `src/libcmaes/`).
+         It is used under the terms of the GNU Lesser General Public License version 3
+         or (at your option) any later version. The full text of the LGPL-3 is available at
+         https://www.gnu.org/licenses/lgpl-3.0.txt. Upstream also offers Apache-2.0 dual-
+         licensing for libcmaes; our copy is used under the LGPL-3+ terms.

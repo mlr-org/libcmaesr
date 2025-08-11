@@ -5,8 +5,8 @@ Authors@R: c(
     person("Marc", "Becker", , "marcbecker@posteo.de", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0002-8115-0400"))
   )
-Copyright: See the file COPYRIGHTS for various Eigen copyright details
-Description: A lightweight R interface to the 'libcmaes' C++ library for Covariance Matrix Adaptation Evolution Strategy (CMA-ES). It allows for the optimization of black-box functions using the CMA-ES algorithm and its variants. Includes a vendored copy of Eigen (MPL-2.0); see inst/COPYRIGHTS.
+Copyright: See the file COPYRIGHTS for Eigen and libcmaes copyright details
+Description: A lightweight R interface to the 'libcmaes' C++ library for Covariance Matrix Adaptation Evolution Strategy (CMA-ES). It allows for the optimization of black-box functions using the CMA-ES algorithm and its variants. Includes vendored copies of Eigen (MPL-2.0) and libcmaes (LGPL-3+); see inst/COPYRIGHTS.
 License: LGPL-3
 URL: https://github.com/berndbischl/libcmaesr
 BugReports: https://github.com/berndbischl/libcmaesr/issues
