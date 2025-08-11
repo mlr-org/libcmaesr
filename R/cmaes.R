@@ -164,7 +164,7 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
 #'     See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 #' @useDynLib libcmaesr, .registration = TRUE
 #' @export
-cmaes = function(objective, x0, lower, upper, control) {
+cmaes = function(objective, x0, lower, upper, control, batch = FALSE) {
   assert_function(objective)
   assert_numeric(x0, min.len = 1, any.missing = FALSE, finite = TRUE)
   assert_numeric(lower, min.len = 1, any.missing = FALSE, finite = TRUE)
@@ -180,5 +180,10 @@ cmaes = function(objective, x0, lower, upper, control) {
     stop("'x0' must be strictly between 'lower' and 'upper'!")
   }
   assert_class(control, "cmaes_control")
-  .Call("c_cmaes_wrap", objective, x0, lower, upper, control, PACKAGE = "libcmaesr")
+  if (batch) {
+    .Call("c_cmaes_wrap_batch", objective, x0, lower, upper, control, PACKAGE = "libcmaesr")
+  } else {
+    .Call("c_cmaes_wrap_single", objective, x0, lower, upper, control, PACKAGE = "libcmaesr")
+  }
 }
+

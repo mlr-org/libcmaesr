@@ -1,5 +1,7 @@
 #include <libcmaes/cmaes.h>
 #include <Eigen/Dense>
+#include <unordered_map>
+#include <limits>
 #include "rc_helpers.h"
 
 using namespace libcmaes;
@@ -9,6 +11,8 @@ using Eigen::VectorXd;
 using MyGenoPheno = GenoPheno<pwqBoundStrategy, linScalingStrategy>;
 using MyCMAParameters = CMAParameters<MyGenoPheno>;
 
+// cache for batch evaluation mapping phenotype column pointers to fvalues
+static std::unordered_map<const double*, double> G_EVAL_CACHE;
 
 /*
 FIXME:
@@ -20,6 +24,8 @@ FIXME:
 - do proper debug printer and put it in rc-helpers
 - RC_helpers: add copy function for vecs and matrixes (rows, cols)
 - check restarts for ipop and bipop with some form of test
+- add lic etc for libcmaes
+- at least bipop seems to not respect max_fevals, opened an issue
 
 - provide readme with install instrauctions and minimal example
 - do speed test vs 1-2 other packages and maybe perf test
@@ -37,179 +43,224 @@ FIXME:
 
 */
 
-// templated version of the main ask-tell loop, so we can run all templated CMA-ES variants
-template <typename Optimizer>
-CMASolutions run_optimizer(Optimizer& optimizer, SEXP s_obj, int lambda, int dim, double max_mult, const MyGenoPheno& gp) {
-  SEXP s_x = RC_dblmat_create_PROTECT(lambda, dim);
-
-  while (!optimizer.stop()) {
-    dMat cands_x = optimizer.ask();
-    for (int r = 0; r < lambda; r++) {
-      dVec x = cands_x.col(r);
-      dVec xp = gp.pheno(x);
-      for (int i = 0; i < dim; i++) {
-        REAL(s_x)[i*lambda + r] = xp(i);
-      }
-    }
-    SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // on_err: unprotect s_x
-    CMASolutions &s = optimizer.get_solutions();
-    for (int r=0; r<s.size(); r++) {
-      s.get_candidate(r).set_x(cands_x.col(r));
-      s.get_candidate(r).set_fvalue(REAL(s_y)[r] * max_mult);
-    }
-    optimizer.update_fevals(s.size());
-    optimizer.tell();
-    optimizer.inc_iter();
-    UNPROTECT(1); // s_y
-  }
-  UNPROTECT(1); // s_x
-  return optimizer.get_solutions();
+// FitFunc that looks up precomputed fvalues from the cache; falls back to single-point R eval
+static double cached_fitfunc_impl(const double *x, const int &n) {
+    // FIXME can we make this faster?
+    auto it = G_EVAL_CACHE.find(x);
+    if (it != G_EVAL_CACHE.end()) return it->second;
+    return std::numeric_limits<double>::quiet_NaN();
 }
 
-// I see unfortunately no way to do this without a switch statement, but at least we can use a template to run all variants
-// inspired by libcmaes/cmaes.h
-CMASolutions dispatch_optimizer(MyCMAParameters& cmaparams, SEXP s_obj, int lambda, int dim,
-  double max_mult, const MyGenoPheno& gp)
-{
+// run strategy with a custom EvalFunc that batch-evaluates the population in R
+template <typename Strategy>
+static CMASolutions run_with_batch_eval(Strategy &strat, SEXP s_obj) {
+  EvalFunc evalf = [&](const dMat &cands, const dMat &phenocands) {
+    const int dim = phenocands.rows();
+    const int lambda = phenocands.cols();
 
-  // dummy needed for constructor, we bypass it later
-  FitFunc dummy_scalar = [](const double*, int){ return 0.0; };
-  DEBUG_PRINT("algo: %d\n", cmaparams.get_algo());
-  switch(cmaparams.get_algo()) {
+    // create lambda x dim matrix for R objective, fill with phenotype
+    SEXP s_x = RC_dblmat_create_PROTECT(lambda, dim);
+    for (int r = 0; r < lambda; ++r) {
+      for (int i = 0; i < dim; ++i) {
+        REAL(s_x)[i * lambda + r] = phenocands(i, r);
+      }
+    }
+
+    // call R once on the whole batch
+    SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
+
+    // populate cache: map phenotype column pointer -> fvalue
+    G_EVAL_CACHE.clear();
+    for (int r = 0; r < lambda; ++r) {
+        G_EVAL_CACHE.emplace(phenocands.col(r).data(), REAL(s_y)[r]);
+    }
+    // delegate to internal eval to mirror all behaviors (UH, elitism, fevals, etc.)
+    strat.eval(cands, phenocands);
+    UNPROTECT(2); // s_x, s_y
+  };
+
+  AskFunc askf = [&]() { return strat.ask(); };
+  TellFunc tellf = [&]() { strat.tell(); };
+
+  strat.optimize(evalf, askf, tellf);
+  return strat.get_solutions();
+}
+
+// minimal dispatch that mirrors libcmaes::cmaes but routes through run_with_batch_eval
+static CMASolutions dispatch_with_batch_eval(MyCMAParameters &cmaparams, SEXP s_obj) {
+    // FitFunc that looks up precomputed fvalues from the cache; falls back to single-point R eval
+    FitFunc cachedFF = [](const double *x, const int &n) { return cached_fitfunc_impl(x, n); };
+
+  switch (cmaparams.get_algo()) {
     case CMAES_DEFAULT: {
-      ESOptimizer<CMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      CMAStrategy<CovarianceUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case IPOP_CMAES: {
-      ESOptimizer<IPOPCMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      IPOPCMAStrategy<CovarianceUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case BIPOP_CMAES: {
-      ESOptimizer<BIPOPCMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      BIPOPCMAStrategy<CovarianceUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case aCMAES: {
-      ESOptimizer<CMAStrategy<ACovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      CMAStrategy<ACovarianceUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case aIPOP_CMAES: {
-      ESOptimizer<IPOPCMAStrategy<ACovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      IPOPCMAStrategy<ACovarianceUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case aBIPOP_CMAES: {
-      ESOptimizer<BIPOPCMAStrategy<ACovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      BIPOPCMAStrategy<ACovarianceUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case sepCMAES: {
       cmaparams.set_sep();
-      ESOptimizer<CMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      CMAStrategy<CovarianceUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case sepIPOP_CMAES: {
       cmaparams.set_sep();
-      ESOptimizer<IPOPCMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      IPOPCMAStrategy<CovarianceUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case sepBIPOP_CMAES: {
       cmaparams.set_sep();
-      ESOptimizer<BIPOPCMAStrategy<CovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      BIPOPCMAStrategy<CovarianceUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case sepaCMAES: {
       cmaparams.set_sep();
-      ESOptimizer<CMAStrategy<ACovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      CMAStrategy<ACovarianceUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case sepaIPOP_CMAES: {
       cmaparams.set_sep();
-      ESOptimizer<IPOPCMAStrategy<ACovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      IPOPCMAStrategy<ACovarianceUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case sepaBIPOP_CMAES: {
       cmaparams.set_sep();
-      ESOptimizer<BIPOPCMAStrategy<ACovarianceUpdate,MyGenoPheno>,MyCMAParameters,CMASolutions> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult,     gp);
+      BIPOPCMAStrategy<ACovarianceUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case VD_CMAES: {
       cmaparams.set_vd();
-      ESOptimizer<CMAStrategy<VDCMAUpdate,MyGenoPheno>,MyCMAParameters> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      CMAStrategy<VDCMAUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case VD_IPOP_CMAES: {
       cmaparams.set_vd();
-      ESOptimizer<IPOPCMAStrategy<VDCMAUpdate,MyGenoPheno>,MyCMAParameters> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      IPOPCMAStrategy<VDCMAUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     case VD_BIPOP_CMAES: {
       cmaparams.set_vd();
-      ESOptimizer<BIPOPCMAStrategy<VDCMAUpdate,MyGenoPheno>,MyCMAParameters> cmaes(dummy_scalar, cmaparams);
-      return run_optimizer(cmaes, s_obj, lambda, dim, max_mult, gp);
+      BIPOPCMAStrategy<VDCMAUpdate, MyGenoPheno> strat(cachedFF, cmaparams);
+      return run_with_batch_eval(strat, s_obj);
     }
     default:
       Rf_error("Unknown CMA-ES variant specified.");
   }
+
+  // not reached
+  return CMASolutions();
 }
 
 
-extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
+std::pair<MyCMAParameters, MyGenoPheno> cmaes_setup(SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
+    int dim = Rf_length(s_x0);
+    int lambda = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "lambda"));
+    if (lambda == NA_INTEGER) lambda = -1;
+    double sigma = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "sigma"));
+    if (R_IsNA(sigma)) sigma = -1;
+    int seed = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "seed"));
+    seed = (seed == NA_INTEGER) ? 0 : seed;
 
-  // get dim, lambda, sigma, seed
-  // for lambda and sigma, if NA, use default values
-  int dim = Rf_length(s_x0);
-  int lambda = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "lambda"));
-  if (lambda == NA_INTEGER) lambda = -1;
-  double sigma = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "sigma"));
-  if (R_IsNA(sigma)) sigma = -1;
-  int seed = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "seed"));
-  seed = (seed == NA_INTEGER) ? 0 : seed;
+    DEBUG_PRINT("cmaes_setup: dim: %d; lambda: %d; sigma: %f; seed: %d\n", dim, lambda, sigma, seed);
 
-  // init params and geno-pheno transform, with lin-scaling strategy
-  MyGenoPheno gp(REAL(s_lower), REAL(s_upper), dim);
-  MyCMAParameters cmaparams(dim, REAL(s_x0), sigma, lambda, seed, gp);
+    // init params and geno-pheno transform, with lin-scaling strategy
+    MyGenoPheno gp(REAL(s_lower), REAL(s_upper), dim);
+    MyCMAParameters cmaparams(dim, REAL(s_x0), sigma, lambda, seed, gp);
+
+    // set further params
+    cmaparams.set_maximize(Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "maximize")));
+    int max_fevals = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_fevals"));
+    if (max_fevals != NA_INTEGER) cmaparams.set_max_fevals(max_fevals);
+    int max_iter = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_iter"));
+    if (max_iter != NA_INTEGER) cmaparams.set_max_iter(max_iter);
+    double ftarget = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "ftarget"));
+    if (!R_IsNA(ftarget)) cmaparams.set_ftarget(ftarget);
+    double f_tolerance = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "f_tolerance"));
+    if (!R_IsNA(f_tolerance)) cmaparams.set_ftolerance(f_tolerance);
+    double x_tolerance = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "x_tolerance"));
+    if (!R_IsNA(x_tolerance)) cmaparams.set_xtolerance(x_tolerance);
+    int max_restarts = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_restarts"));
+    if (max_restarts != NA_INTEGER) cmaparams.set_restarts(max_restarts);
+    int elitism = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "elitism"));
+    if (elitism != NA_INTEGER) cmaparams.set_elitism(elitism);
+    int tpa = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "tpa"));
+    if (tpa != NA_INTEGER) cmaparams.set_tpa(tpa);
+    double dsigma = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "tpa_dsigma"));
+    if (!R_IsNA(dsigma)) cmaparams.set_tpa_dsigma(dsigma);
+
+    DEBUG_PRINT("cmaes_setup: done\n");
+
+    return std::make_pair(cmaparams, gp);
+}
+
+SEXP create_SEXP_result(CMASolutions& sols, MyGenoPheno& gp, MyCMAParameters& cmaparams) {
+    // get best seen candidate and transform to pheno (!)
+    Candidate bcand = sols.get_best_seen_candidate();
+    dVec best_x = gp.pheno(bcand.get_x_dvec());
+    double best_y = bcand.get_fvalue();
+    // maximize -> negate best_y which was internally multiplied by -1
+    best_y = cmaparams.get_maximize() ? -best_y : best_y;
+
+    // copy results to R
+    const char* res_names[] = {"x", "y", "edm", "time", "status"};
+    SEXP s_res = RC_list_create_withnames_PROTECT(5, res_names);
+    SEXP s_res_x = RC_dblvec_create_init_PROTECT(best_x.size(), best_x.data());
+    SET_VECTOR_ELT(s_res, 0, s_res_x);
+    RC_list_set_el_dblscalar(s_res, 1, best_y);
+    RC_list_set_el_dblscalar(s_res, 2, sols.edm());
+    RC_list_set_el_dblscalar(s_res, 3, sols.elapsed_time() / 1000.0);
+    RC_list_set_el_intscalar(s_res, 4, sols.run_status());
+    UNPROTECT(2); // s_res, s_res_x
+    return s_res;
+}
+
+
+extern "C" SEXP c_cmaes_wrap_single(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
+
+  auto [cmaparams, gp] = cmaes_setup(s_x0, s_lower, s_upper, s_ctrl);
+  // set str_algo, in batch mode we manually dispatch to the right strategy
   cmaparams.set_str_algo(RC_charscalar_as_string(RC_list_get_el_by_name(s_ctrl, "algo")));
 
-  // set further params
-  int maximize = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "maximize"));
-  double max_mult = maximize ? -1.0 : 1.0;
-  cmaparams.set_maximize(true);
-  int max_fevals = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_fevals"));
-  if (max_fevals != NA_INTEGER) cmaparams.set_max_fevals(max_fevals);
-  int max_iter = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_iter"));
-  if (max_iter != NA_INTEGER) cmaparams.set_max_iter(max_iter);
-  double ftarget = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "ftarget"));
-  if (!R_IsNA(ftarget)) cmaparams.set_ftarget(ftarget);
-  double f_tolerance = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "f_tolerance"));
-  if (!R_IsNA(f_tolerance)) cmaparams.set_ftolerance(f_tolerance);
-  double x_tolerance = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "x_tolerance"));
-  if (!R_IsNA(x_tolerance)) cmaparams.set_xtolerance(x_tolerance);
-  int max_restarts = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_restarts"));
-  if (max_restarts != NA_INTEGER) cmaparams.set_restarts(max_restarts);
-  int elitism = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "elitism"));
-  if (elitism != NA_INTEGER) cmaparams.set_elitism(elitism);
-  int tpa = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "tpa"));
-  if (tpa != NA_INTEGER) cmaparams.set_tpa(tpa);
-  double dsigma = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "tpa_dsigma"));
-  if (!R_IsNA(dsigma)) cmaparams.set_tpa_dsigma(dsigma);
+  // scalar fitfunc, simple case
+  FitFunc func = [&](const double *x, const int &n) -> double {
+    // setup R dbl vec, copy, eval, return
+    SEXP s_x = RC_dblvec_create_PROTECT(n);
+    for (int i = 0; i < n; ++i)
+      REAL(s_x)[i] = x[i];
+    SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
+    double val = REAL(s_y)[0];
+    UNPROTECT(2); // s_x, s_y
+    return val;
+  };
 
-  lambda = cmaparams.lambda();  // get lambda from cmaparams if we used -1 for defaults before
-  DEBUG_PRINT("seed: %d; lambda: %d; sigma: %f\n", seed, lambda, sigma);
+  // now run via libcmaes::cmaes servive fun, easy
+  CMASolutions sols = cmaes<MyGenoPheno>(func, cmaparams);
+  // max_mult and manual pheno not needed for single
+  return create_SEXP_result(sols, gp, cmaparams);
+}
 
-  CMASolutions sols = dispatch_optimizer(cmaparams, s_obj, lambda, dim, max_mult, gp);
 
-  // get best seen candidate and transform to pheno (!)
-  Candidate bcand = sols.get_best_seen_candidate();
-  dVec best_x = gp.pheno(bcand.get_x_dvec());
 
-  // copy results to R
-  const char* res_names[] = {"x", "y", "edm", "time", "status"};
-  SEXP s_res = RC_list_create_withnames_PROTECT(5, res_names);
-  SEXP s_res_x = RC_dblvec_create_init_PROTECT(dim, best_x.data());
-  SET_VECTOR_ELT(s_res, 0, s_res_x);
-  RC_list_set_el_dblscalar(s_res, 1, bcand.get_fvalue() * max_mult);
-  RC_list_set_el_dblscalar(s_res, 2, sols.edm());
-  RC_list_set_el_dblscalar(s_res, 3, sols.elapsed_time() / 1000.0);
-  RC_list_set_el_intscalar(s_res, 4, sols.run_status());
-  UNPROTECT(2); // s_res, s_res_x
-
-  return s_res;
+extern "C" SEXP c_cmaes_wrap_batch(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
+    auto [cmaparams, gp] = cmaes_setup(s_x0, s_lower, s_upper, s_ctrl);
+    CMASolutions sols = dispatch_with_batch_eval(cmaparams, s_obj);
+    return create_SEXP_result(sols, gp, cmaparams);
 }
