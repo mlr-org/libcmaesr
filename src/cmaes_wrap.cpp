@@ -1,7 +1,7 @@
+#include <asm-generic/errno.h>
 #include <libcmaes/cmaes.h>
 #include <Eigen/Dense>
 #include <unordered_map>
-#include <limits>
 #include "rc_helpers.h"
 
 using namespace libcmaes;
@@ -13,6 +13,7 @@ using MyCMAParameters = CMAParameters<MyGenoPheno>;
 
 // cache for batch evaluation mapping phenotype column pointers to fvalues
 static std::unordered_map<const double*, double> G_EVAL_CACHE;
+static SEXP G_OBJ;
 
 /*
 FIXME:
@@ -25,6 +26,8 @@ FIXME:
 - add lic etc for libcmaes
 - at least bipop seems to not respect max_fevals, opened an issue
 - create option to see libcmaes log output
+- check if we can make teh cache eval faster
+- reenable restart tests in test_batch.R
 
 - provide readme with install instrauctions and minimal example
 - do speed test vs 1-2 other packages and maybe perf test
@@ -43,11 +46,23 @@ FIXME:
 */
 
 // FitFunc that looks up precomputed fvalues from the cache; falls back to single-point R eval
-static double cached_fitfunc_impl(const double *x, const int &n) {
+static double cached_fitfunc_impl(const double *x, int dim) {
+  DEBUG_PRINT("cached_fitfunc_impl: dim=%d\n", dim);
   // FIXME can we make this faster?
   auto it = G_EVAL_CACHE.find(x);
-  if (it != G_EVAL_CACHE.end()) return it->second;
-  return std::numeric_limits<double>::quiet_NaN();
+  if (it != G_EVAL_CACHE.end()) {
+    return it->second;
+  } else {
+    DEBUG_PRINT("cached_fitfunc_impl: not found\n");
+    // create matrix with 1 row and eval in R
+    SEXP s_x = RC_dblmat_create_PROTECT(1, dim);
+    for (int i = 0; i < dim; ++i) {
+      REAL(s_x)[i] = x[i];
+    }
+    SEXP s_y = RC_tryeval_PROTECT(G_OBJ, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
+    UNPROTECT(2); // s_x, s_y
+    return REAL(s_y)[0];
+  }
 }
 
 // run strategy with a custom EvalFunc that batch-evaluates the population in R
@@ -261,6 +276,7 @@ extern "C" SEXP c_cmaes_wrap_single(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_
 
 extern "C" SEXP c_cmaes_wrap_batch(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
     auto [cmaparams, gp] = cmaes_setup(s_x0, s_lower, s_upper, s_ctrl);
+    G_OBJ = s_obj;
     CMASolutions sols = dispatch_with_batch_eval(cmaparams, s_obj);
     return create_SEXP_result(sols, gp, cmaparams);
 }
