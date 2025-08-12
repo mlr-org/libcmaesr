@@ -18,4 +18,5 @@ src/*.dll
 /cpp-tests/test_ipop_max_fevals
 /cpp-tests/test_bipop_max_fevals
 /benchmarks/registry/
-/benchmarks/benchmark.png
+/benchmarks/speed_ml.png
+/benchmarks/speed_testfuns.png
