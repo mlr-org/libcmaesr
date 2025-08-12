@@ -16,7 +16,8 @@ Imports:
     checkmate (>= 2.0.0),
     mlr3misc (>= 0.15.1)
 Suggests:
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    callr (>= 3.7.0)
 SystemRequirements: C++17
 Config/testthat/edition: 3
 Config/testthat/parallel: false

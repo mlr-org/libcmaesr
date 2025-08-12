@@ -6,7 +6,7 @@
 \usage{
 cmaes_control(
   maximize = FALSE,
-  algo = "cmaes",
+  algo = "acmaes",
   max_fevals = 100,
   max_iter = NA_integer_,
   ftarget = NA_real_,
@@ -18,7 +18,10 @@ cmaes_control(
   elitism = NA_integer_,
   tpa = NA_integer_,
   tpa_dsigma = NA_real_,
-  seed = NA_integer_
+  seed = NA_integer_,
+  quiet = TRUE,
+  x0_lower = NULL,
+  x0_upper = NULL
 )
 }
 \arguments{
@@ -28,7 +31,9 @@ Default is \code{FALSE}.}
 
 \item{algo}{(\code{character(1)})\cr
 The CMAES variant to use.
-Possible values are: \link{cmaes_algos}.}
+Possible values are: \link{cmaes_algos}.
+Default is "acmaes", as recommended by
+\url{https://github.com/CMA-ES/libcmaes/wiki/Practical-hints}.}
 
 \item{max_fevals}{(\code{integer(1)})\cr
 The maximum number of function evaluations.
@@ -89,6 +94,22 @@ NA for default handling by libcmaes.}
 The seed for the random number generator. If \code{NA}, the seed is set to 0.
 NB: The RNG of the libcmaes is different to the one in R and is hence not subject to R's seeding.
 NA for default handling by libcmaes, time is used in libcmaes to seed.}
+
+\item{quiet}{(\code{logical(1)})\cr
+Whether to suppress libcmaes output.
+NB: This does not trigger proper R printing, but the internal libcmaes printer,
+use with care, usually we dont want this. Useful for debugging.
+Default is \code{TRUE}.}
+
+\item{x0_lower}{(\code{numeric(1)})\cr
+Optional lower bounds for randomizing the initial mean \code{x0},
+also after restarts.
+Use \code{NULL} to disable.}
+
+\item{x0_upper}{(\code{numeric(1)})\cr
+Optional upper bounds for randomizing the initial mean \code{x0},
+also after restarts.
+Use \code{NULL} to disable.}
 }
 \value{
 A cmaes_control S3 object, which is a list with the passed arguments.

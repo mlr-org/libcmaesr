@@ -4,18 +4,21 @@
 \alias{cmaes}
 \title{Covariance Matrix Adaptation Evolution Strategy}
 \usage{
-cmaes(objective, x0, lower, upper, control)
+cmaes(objective, x0, lower, upper, control, batch = FALSE)
 }
 \arguments{
 \item{objective}{(\verb{function(x)})\cr
 Objective function, to minimize.
-\code{x} is a numeric matrix with \code{lambda} rows and \code{n} = dim-of-x columns.
-Evaluate them all in a batch fashion and return a numeric vector of length \code{lambda}.
-This usually reduced overhead and allows you to orchestrate parallelization
+If \code{batch} is \code{FALSE}, \code{x} is a numeric vector of length \code{n} = dim-of-x;
+and the function must return a scalar double.
+If \code{batch} is \code{TRUE}, \code{x} is a numeric matrix with \code{lambda} rows and \code{n} = dim-of-x columns.
+The function must return a numeric vector of length \code{lambda}.
+The latter usually reduces overhead and allows you to orchestrate parallelization
 yourself if you need it because the objective function is more expensive.}
 
 \item{x0}{(\code{numeric(n)})\cr
-Initial point.}
+Initial point.
+NB: This point is IGNORED if you also set \code{x0_lower} and \code{x0_upper}!}
 
 \item{lower}{(\code{numeric(n)})\cr
 Lower bounds of search space.}
@@ -25,6 +28,10 @@ Upper bounds of search space.}
 
 \item{control}{(\code{cmaes_control})\cr
 A control object created by \code{\link[=cmaes_control]{cmaes_control()}}.}
+
+\item{batch}{(\code{logical(1)})\cr
+Whether the objective function evaluates a batch of points at once.
+Default is \code{FALSE}.}
 }
 \value{
 (name \code{list}). List with elements:

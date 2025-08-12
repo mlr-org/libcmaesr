@@ -159,9 +159,11 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
 #'
 #' @param objective (`function(x)`)\cr
 #'   Objective function, to minimize.
-#'   `x` is a numeric matrix with `lambda` rows and `n` = dim-of-x columns.
-#'   Evaluate them all in a batch fashion and return a numeric vector of length `lambda`.
-#'   This usually reduced overhead and allows you to orchestrate parallelization
+#'   If `batch` is `FALSE`, `x` is a numeric vector of length `n` = dim-of-x;
+#'   and the function must return a scalar double.
+#'   If `batch` is `TRUE`, `x` is a numeric matrix with `lambda` rows and `n` = dim-of-x columns.
+#'   The function must return a numeric vector of length `lambda`.
+#'   The latter usually reduces overhead and allows you to orchestrate parallelization
 #'   yourself if you need it because the objective function is more expensive.
 #' @param x0 (`numeric(n)`)\cr
 #'   Initial point.
@@ -172,6 +174,9 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
 #'   Upper bounds of search space.
 #' @param control (`cmaes_control`)\cr
 #'   A control object created by [cmaes_control()].
+#' @param batch (`logical(1)`)\cr
+#'   Whether the objective function evaluates a batch of points at once.
+#'   Default is `FALSE`.
 #' @return (name `list`). List with elements:
 #'   - 'x': (`numeric(n)`)\cr
 #'     The best point found, length corresponds to x0, lower and upper.
@@ -205,10 +210,10 @@ cmaes = function(objective, x0, lower, upper, control, batch = FALSE) {
   }
 
   if (!is.null(control$x0_lower) && length(control$x0_lower) != length(lower)) {
-      stop("'x0_lower' must have the same length as 'lower'!")
+    stop("'x0_lower' must have the same length as 'lower'!")
   }
   if (!is.null(control$x0_upper) && length(control$x0_upper) != length(upper)) {
-      stop("'x0_upper' must have the same length as 'upper'!")
+    stop("'x0_upper' must have the same length as 'upper'!")
   }
   if (!all(control$x0_lower < control$x0_upper)) {
     stop("'x0_lower' must be strictly smaller than 'x0_upper'!")

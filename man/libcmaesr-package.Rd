@@ -6,7 +6,7 @@
 \alias{libcmaesr-package}
 \title{libcmaesr: R Interface to 'libcmaes'}
 \description{
-A lightweight R interface to the 'libcmaes' C++ library for Covariance Matrix Adaptation Evolution Strategy (CMA-ES). It allows for the optimization of black-box functions using the CMA-ES algorithm and its variants. Includes a vendored copy of Eigen (MPL-2.0); see inst/COPYRIGHTS.
+A lightweight R interface to the 'libcmaes' C++ library for Covariance Matrix Adaptation Evolution Strategy (CMA-ES). It allows for the optimization of black-box functions using the CMA-ES algorithm and its variants. Includes vendored copies of Eigen (MPL-2.0) and libcmaes (LGPL-3+); see inst/COPYRIGHTS.
 }
 \seealso{
 Useful links:
