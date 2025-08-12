@@ -17,10 +17,7 @@ static SEXP G_OBJ;
 
 /*
 FIXME:
-- cmaparams.set_x0(-3.0,3.0); // set x0 domain as [-3,3]^d where d is the dimension of the pro
 - look at and test multithreading
-- check what happens if objectives uses wrong data typoes (input and output)
-- unit test some NA combos for ctrl params
 - check if we can make teh cache eval faster
 
 - at least bipop seems to not respect max_fevals, opened an issue
