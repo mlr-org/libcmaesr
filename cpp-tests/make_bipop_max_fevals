@@ -1,9 +1,0 @@
-g++ test_bipop_max_fevals.cpp \
-  -I../inst/include \
-  -I../src/libcmaes/include \
-  -I../src/libcmaes/build/include \
-  -L../src/libcmaes/build/src \
-  -Wl,-Bstatic -lcmaes -Wl,-Bdynamic \
-  -o test_bipop_max_fevals \
-  -std=c++11 \
-  -fopenmp

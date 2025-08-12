@@ -13,13 +13,13 @@ int main() {
   double sigma = 0.2;
 
   CMAParameters<> params(x0, sigma);
-  params.set_str_algo("bipop");
+  params.set_str_algo("ipop");
   params.set_seed(42);
   params.set_quiet(false);
 
-  const int max_fevals = 1400;
+  const int max_fevals = 1500;
   params.set_max_fevals(max_fevals);
-  params.set_restarts(2);
+  params.set_restarts(5);
 
 
   FitFunc func = [&](const double *x, const int &n) -> double {
@@ -32,3 +32,4 @@ int main() {
 
   return 0;
 }
+
