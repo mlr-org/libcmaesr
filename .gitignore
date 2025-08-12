@@ -15,3 +15,5 @@ src/*.dll
 .Rhistory
 **/.Rhistory
 
+/cpp-tests/test_ipop_max_fevals
+/cpp-tests/test_bipop_max_fevals
