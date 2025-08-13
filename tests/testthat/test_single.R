@@ -1,7 +1,3 @@
-f_sphere_single = function(x) {
-  sum(row^2)
-}
-
 eval_log = NULL
 
 # helper to create a logged sphere objective with lambda-aware argument checks
