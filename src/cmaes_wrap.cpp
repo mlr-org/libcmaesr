@@ -257,8 +257,9 @@ SEXP create_SEXP_result(CMASolutions& sols, MyGenoPheno& gp, MyCMAParameters& cm
 
 
 extern "C" SEXP c_cmaes_wrap_single(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
-
-  auto [cmaparams, gp] = cmaes_setup(s_x0, s_lower, s_upper, s_ctrl);
+  std::pair<MyCMAParameters, MyGenoPheno> setup = cmaes_setup(s_x0, s_lower, s_upper, s_ctrl);
+  MyCMAParameters &cmaparams = setup.first;
+  MyGenoPheno &gp = setup.second;
 
   // scalar fitfunc, simple case
   FitFunc func = [&](const double *x, const int &n) -> double {
@@ -278,7 +279,9 @@ extern "C" SEXP c_cmaes_wrap_single(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_
 
 
 extern "C" SEXP c_cmaes_wrap_batch(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
-    auto [cmaparams, gp] = cmaes_setup(s_x0, s_lower, s_upper, s_ctrl);
+    std::pair<MyCMAParameters, MyGenoPheno> setup = cmaes_setup(s_x0, s_lower, s_upper, s_ctrl);
+    MyCMAParameters &cmaparams = setup.first;
+    MyGenoPheno &gp = setup.second;
     G_OBJ = s_obj;
     CMASolutions sols = dispatch_with_batch_eval(cmaparams, s_obj);
     return create_SEXP_result(sols, gp, cmaparams);

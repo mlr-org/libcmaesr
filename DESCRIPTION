@@ -18,7 +18,6 @@ Imports:
 Suggests:
     testthat (>= 3.0.0),
     callr (>= 3.7.0)
-SystemRequirements: C++17
 Config/testthat/edition: 3
 Config/testthat/parallel: false
 Encoding: UTF-8

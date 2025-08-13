@@ -97,8 +97,8 @@ NA for default handling by libcmaes, time is used in libcmaes to seed.}
 
 \item{quiet}{(\code{logical(1)})\cr
 Whether to suppress libcmaes output.
-NB: This does not trigger proper R printing, but the internal libcmaes printer,
-use with care, usually we dont want this. Useful for debugging.
+Internal logging of libcmaes is rerouted to Rprintf, so things like
+capture.output() will work. Useful for debugging.
 Default is \code{TRUE}.}
 
 \item{x0_lower}{(\code{numeric(1)})\cr
