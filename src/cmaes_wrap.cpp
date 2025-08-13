@@ -1,4 +1,3 @@
-#include <asm-generic/errno.h>
 #include <libcmaes/cmaes.h>
 #include <Eigen/Dense>
 #include <unordered_map>
@@ -17,8 +16,22 @@ static SEXP G_OBJ;
 
 /*
 FIXME:
+- we currently have a fork of libcmaes with 2 branches:
+  - r-changes: overwites cout logging to Rprintf
+  - feat-bipop-budgets: budget fixes for bipop and ipop
+
 - look at and test multithreading
-- check if we can make teh cache eval faster
+  openmp i have currently disabled in the build system,
+  in any case, we would not be allowed to call into the R Api
+  In libcmaes: CMAParameters::set_mt_feval(true/false) toggles OpenMP for
+  the population evaluation and finite-difference gradient loops specifically.
+  Other OpenMP regions (e.g., in genopheno.h and surrogate rankingsvm.hpp)
+  don’t have a library-level switch, so use OMP_NUM_THREADS to control them.
+
+  - check if we can make teh cache eval faster
+
+- overwrite logging in llogging.h to Rprintf
+  done
 
 - at least bipop seems to not respect max_fevals, opened an issue
 - provide readme with install instrauctions and minimal example
@@ -27,7 +40,6 @@ FIXME:
 - read all files
 - read python version
 
-- allow non-vectorized objective. to use multithreading.
 - consider noisy case
   --> there is set_uh in cmaparams
 - look at surrogates
@@ -216,6 +228,7 @@ std::pair<MyCMAParameters, MyGenoPheno> cmaes_setup(SEXP s_x0, SEXP s_lower, SEX
     if (s_x0_lower != R_NilValue && s_x0_upper != R_NilValue) {
       cmaparams.set_x0(REAL(s_x0_lower), REAL(s_x0_upper));
     }
+    cmaparams.set_mt_feval(false); // disable openmp, we are not allowed to call into R api
     DEBUG_PRINT("cmaes_setup: done\n");
 
     return std::make_pair(cmaparams, gp);
