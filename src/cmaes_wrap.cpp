@@ -28,11 +28,6 @@ FIXME:
   Other OpenMP regions (e.g., in genopheno.h and surrogate rankingsvm.hpp)
   don’t have a library-level switch, so use OMP_NUM_THREADS to control them.
 
-  - check if we can make teh cache eval faster
-
-- overwrite logging in llogging.h to Rprintf
-  done
-
 - at least bipop seems to not respect max_fevals, opened an issue
 - provide readme with install instrauctions and minimal example
 - do speed test vs 1-2 other packages and maybe perf test
@@ -42,6 +37,7 @@ FIXME:
 
 - consider noisy case
   --> there is set_uh in cmaparams
+  --> we have to be careful with the global cache here!!!
 - look at surrogates
 - support unbounded problems
 - allow setting gradients
@@ -85,6 +81,7 @@ static CMASolutions run_with_batch_eval(Strategy &strat, SEXP s_obj) {
     SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
 
     // populate cache: map phenotype column pointer -> fvalue
+    G_EVAL_CACHE.reserve(lambda);
     G_EVAL_CACHE.clear();
     for (int r = 0; r < lambda; ++r) {
         G_EVAL_CACHE.emplace(phenocands.col(r).data(), REAL(s_y)[r]);
