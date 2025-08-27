@@ -191,12 +191,12 @@ test_that("ipop/bipop non-batch logs show multiple restarts when budget allows",
       },
       args = list(algo = algo)
     )
+    out = p$read_all_output()
     p$wait()
     res = p$get_result()
     expect_named(res, c("x", "y", "edm", "time", "status_code", "status_msg"), ignore.order = TRUE)
     expect_integer(res$status_code, lower = 0, len = 1)
     expect_string(res$status_msg)
-    out = p$read_output()
     n_restart = length(gregexpr("restart", out, ignore.case = TRUE)[[1]])
     expect_gte(n_restart, 2)  # should indicate multiple restarts in logs
   }
