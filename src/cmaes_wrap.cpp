@@ -261,14 +261,15 @@ SEXP create_SEXP_result(CMASolutions& sols, MyGenoPheno& gp, MyCMAParameters& cm
     best_y = cmaparams.get_maximize() ? -best_y : best_y;
 
     // copy results to R
-    const char* res_names[] = {"x", "y", "edm", "time", "status"};
-    SEXP s_res = RC_list_create_withnames_PROTECT(5, res_names);
+    const char* res_names[] = {"x", "y", "edm", "time", "status_code", "status_msg"};
+    SEXP s_res = RC_list_create_withnames_PROTECT(6, res_names);
     SEXP s_res_x = RC_dblvec_create_init_PROTECT(best_x.size(), best_x.data());
     SET_VECTOR_ELT(s_res, 0, s_res_x);
     RC_list_set_el_dblscalar(s_res, 1, best_y);
     RC_list_set_el_dblscalar(s_res, 2, sols.edm());
     RC_list_set_el_dblscalar(s_res, 3, sols.elapsed_time() / 1000.0); // in secs
     RC_list_set_el_intscalar(s_res, 4, sols.run_status());
+    SET_VECTOR_ELT(s_res, 5, Rf_mkString(sols.status_msg().c_str()));
     UNPROTECT(2); // s_res, s_res_x
     return s_res;
 }
