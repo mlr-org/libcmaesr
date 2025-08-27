@@ -103,6 +103,10 @@ void RC_r6_set_member(SEXP s_r6, const char* name, SEXP s_value);
 // except for the extra unprotect-on-error we assume nothing more is needed / auto-cleaned-up
 SEXP RC_tryeval_PROTECT(SEXP s_fun, SEXP s_arg, const char* errmsg, int on_err_unprotect);
 
+// ********** Type checks **********
+
+// check that s_y is a numeric vector of length expected_length, throw error if not (Rf_error)
+void RC_check_numeric_vector(SEXP s_y, int expected_length);
 
 #ifdef __cplusplus
 }
