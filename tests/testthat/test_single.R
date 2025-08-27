@@ -216,3 +216,30 @@ test_that("single: x0 randomization accepts vector bounds and runs", {
   ee = eval_log
   expect_true(all(ee$x1 >= x0_lower[1] & ee$x1 <= x0_upper[1]))
 })
+
+
+test_that("single: objective must return numeric scalar (type check)", {
+  dim = 2
+  fn = function(x) "oops"  # wrong type
+  x0 = rep(0.5, dim)
+  lower = rep(-1, dim)
+  upper = rep(1, dim)
+  ctrl = cmaes_control(max_fevals = 5)
+  expect_error(
+    cmaes(fn, x0, lower, upper, ctrl, batch = FALSE),
+    regexp = "objective must return.*numeric"
+  )
+})
+
+test_that("single: objective must return length 1 (length check)", {
+  dim = 2
+  fn = function(x) c(1, 2)  # wrong length
+  x0 = rep(0.5, dim)
+  lower = rep(-1, dim)
+  upper = rep(1, dim)
+  ctrl = cmaes_control(max_fevals = 5)
+  expect_error(
+    cmaes(fn, x0, lower, upper, ctrl, batch = FALSE),
+    regexp = "length 1.*got 2"
+  )
+})

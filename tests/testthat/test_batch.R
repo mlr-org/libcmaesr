@@ -214,3 +214,32 @@ test_that("ipop restarts double lambda across restarts when budget allows", {
     expect_contains(bs, c(2, 4))
   }
 })
+
+
+test_that("batch: objective must return numeric vector (type check)", {
+  dim = 3
+  lambda = 4
+  fn = function(x) rep("oops", nrow(x))  # wrong type
+  x0 = rep(0.5, dim)
+  lower = rep(-1, dim)
+  upper = rep(1, dim)
+  ctrl = cmaes_control(lambda = lambda, max_fevals = 8)
+  expect_error(
+    cmaes(fn, x0, lower, upper, ctrl, batch = TRUE),
+    regexp = "objective must return a numeric vector"
+  )
+})
+
+test_that("batch: objective must return vector of length lambda (length check)", {
+  dim = 3
+  lambda = 5
+  fn = function(x) rep(1, nrow(x) + 1)  # wrong length
+  x0 = rep(0.5, dim)
+  lower = rep(-1, dim)
+  upper = rep(1, dim)
+  ctrl = cmaes_control(lambda = lambda, max_fevals = 10)
+  expect_error(
+    cmaes(fn, x0, lower, upper, ctrl, batch = TRUE),
+    regexp = "length 5.* got 6"
+  )
+})
