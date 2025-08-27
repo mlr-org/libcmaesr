@@ -62,8 +62,11 @@ static double cached_fitfunc_impl(const double *x, int dim) {
     // create matrix with 1 row and eval in R
     SEXP s_x = RC_dblmat_create_init_PROTECT(1, dim, x);
     SEXP s_y = RC_tryeval_PROTECT(G_OBJ, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
+    // enforce numeric scalar return for single-row evaluation (batch fallback)
+    RC_check_numeric_vector(s_y, 1);
+    double yval = Rf_asReal(s_y);
     UNPROTECT(2); // s_x, s_y
-    return REAL(s_y)[0];
+    return yval;
   }
 }
 
@@ -88,6 +91,8 @@ static CMASolutions run_with_batch_eval(Strategy &strat, SEXP s_obj) {
 
     // call R once on the whole batch
     SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
+    // validate return: numeric vector of length lambda; coerce to REAL if needed
+    RC_check_numeric_vector(s_y, lambda);
 
     // populate cache: map phenotype column pointer -> fvalue
     G_EVAL_CACHE.reserve(lambda);
@@ -249,14 +254,15 @@ SEXP create_SEXP_result(CMASolutions& sols, MyGenoPheno& gp, MyCMAParameters& cm
     best_y = cmaparams.get_maximize() ? -best_y : best_y;
 
     // copy results to R
-    const char* res_names[] = {"x", "y", "edm", "time", "status"};
-    SEXP s_res = RC_list_create_withnames_PROTECT(5, res_names);
+    const char* res_names[] = {"x", "y", "edm", "time", "status_code", "status_msg"};
+    SEXP s_res = RC_list_create_withnames_PROTECT(6, res_names);
     SEXP s_res_x = RC_dblvec_create_init_PROTECT(best_x.size(), best_x.data());
     SET_VECTOR_ELT(s_res, 0, s_res_x);
     RC_list_set_el_dblscalar(s_res, 1, best_y);
     RC_list_set_el_dblscalar(s_res, 2, sols.edm());
     RC_list_set_el_dblscalar(s_res, 3, sols.elapsed_time() / 1000.0); // in secs
     RC_list_set_el_intscalar(s_res, 4, sols.run_status());
+    SET_VECTOR_ELT(s_res, 5, Rf_mkString(sols.status_msg().c_str()));
     UNPROTECT(2); // s_res, s_res_x
     return s_res;
 }
@@ -274,8 +280,10 @@ extern "C" SEXP c_cmaes_wrap_single(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_
     // setup R dbl vec, copy, eval, return
     SEXP s_x = RC_dblvec_create_init_PROTECT(n, x);
     SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
+    RC_check_numeric_vector(s_y, 1);
+    double yval = Rf_asReal(s_y);
     UNPROTECT(2); // s_x, s_y
-    return Rf_asReal(s_y);
+    return yval;
   };
 
   // now run via libcmaes::cmaes servive fun, easy

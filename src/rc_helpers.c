@@ -193,3 +193,14 @@ SEXP RC_tryeval_PROTECT(SEXP s_fun, SEXP s_arg, const char *errmsg, int on_err_u
   UNPROTECT(1); // s_call
   return s_res;
 }
+
+// ********** Type checks **********
+
+void RC_check_numeric_vector(SEXP s_y, int expected_length) {
+  if (!Rf_isReal(s_y)) {
+    Rf_error("libcmaesr: objective must return a numeric vector of length %d.", expected_length);
+  }
+  if (Rf_length(s_y) != expected_length) {
+    Rf_error("libcmaesr: objective must return a numeric vector of length %d, got %d.", expected_length, Rf_length(s_y));
+  }
+}

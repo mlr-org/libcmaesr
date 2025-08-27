@@ -20,8 +20,10 @@ library(libcmaesr)
 
 # define objective function
 dim = 3
+lambda = 5
+
 fn = function(x) {
-  apply(x, 1, function(row) sum(row^2))
+  sum(x^2)
 }
 
 x0 = rep(0.5, dim)

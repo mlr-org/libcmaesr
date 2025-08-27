@@ -15,22 +15,23 @@
 #' @param max_fevals (`integer(1)`)\cr
 #'   The maximum number of function evaluations.
 #'   NA to disable.
+#'   Default is 100.
 #' @param max_iter (`integer(1)`)\cr
 #'   The maximum number of ES iterations.
-#'   NA to disable.
+#'   NA to disable (default).
 #' @param ftarget (`numeric(1)`)\cr
 #'   Stop when this target function value is reached.
-#'   NA to disable.
+#'   NA to disable (default).
 #' @param f_tolerance (`numeric(1)`)\cr
 #'   Sets function tolerance as stopping criterion;
-#'   monitors the difference in function value over iterations and
+#'   monitors the (absolute) difference in function value over iterations and
 #'   stops optimization when below tolerance.
-#'   NA to disable.
+#'   NA to disable (default).
 #' @param x_tolerance (`numeric(1)`)\cr
-#'   Sets parameter tolerance as stopping criterion.
-#'   NA to disable.
+#'   Sets parameter (absolute) tolerance as stopping criterion.
+#'   NA to disable (default).
 #' @param lambda (`integer(1)`)\cr
-#'   Number of generated descendents per iteration.
+#'   Number of generated descendants per iteration.
 #'   Must be at least 2; NA for default handling by libcmaes.
 #' @param sigma (`numeric(1)`)\cr
 #'   Initial sigma for covariance.
@@ -57,19 +58,21 @@
 #'   Sets tpa dsigma value, use with care.
 #'   NA for default handling by libcmaes.
 #' @param seed (`integer(1)`)\cr
-#'   The seed for the random number generator. If `NA`, the seed is set to 0.
-#'   NB: The RNG of the libcmaes is different to the one in R and is hence not subject to R's seeding.
-#'   NA for default handling by libcmaes, time is used in libcmaes to seed.
+#'   The seed for the random number generator.
+#'   If `NA` (default), the seed is generated randomly by R and thereby coupled to the RNG-state of R.
+#'   Otherwise, the RNG of the libcmaes is different to the one in R and is hence not subject to R's seeding.
+#'   Special value `0` is used for handling by libcmaes, where system time is used in libcmaes to seed.
 #' @param quiet (`logical(1)`)\cr
 #'   Whether to suppress libcmaes output.
 #'   Internal logging of libcmaes is rerouted to Rprintf, so things like
 #'   capture.output() will work. Useful for debugging.
 #'   Default is `TRUE`.
-#' @param x0_lower (`numeric(1)`)\cr
+#' @param x0_lower (`numeric`)\cr
 #'   Optional lower bounds for randomizing the initial mean `x0`,
 #'   also after restarts.
 #'   Use `NULL` to disable.
-#' @param x0_upper (`numeric(1)`)\cr
+#'   If this is non-`NULL`, `x0_upper` must also be set and have the same length as `x0_lower`.
+#' @param x0_upper (`numeric`)\cr
 #'   Optional upper bounds for randomizing the initial mean `x0`,
 #'   also after restarts.
 #'   Use `NULL` to disable.
@@ -99,8 +102,15 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
   assert_number(tpa_dsigma, lower = 0, na.ok = TRUE)
   seed = asInt(seed, na.ok = TRUE)
   assert_flag(quiet)
+  if (is.null(x0_lower) != is.null(x0_upper)) {
+    stop("'x0_lower' and 'x0_upper' must both be NULL or not NULL!")
+  }
   assert_numeric(x0_lower, min.len = 1, any.missing = FALSE, finite = TRUE, null.ok = TRUE)
-  assert_numeric(x0_upper, min.len = 1, any.missing = FALSE, finite = TRUE, null.ok = TRUE)
+  assert_numeric(x0_upper, len = length(x0_lower), any.missing = FALSE, finite = TRUE, null.ok = TRUE)
+  if (!is.null(x0_lower) && !is.null(x0_upper) && !all(x0_lower < x0_upper)) {
+    stop("'x0_lower' must be strictly smaller than 'x0_upper'!")
+  }
+
   res = list(
     maximize = maximize,
     algo = algo,
@@ -121,6 +131,14 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
     x0_upper = x0_upper
   )
   set_class(res, "cmaes_control")
+}
+
+#' @export
+print.cmaes_control = function(x, ...) {
+  cc_not_default = Filter(function(x) !is.null(x) && (length(x) > 1 || !is.na(x)), x)
+  cat("CMA-ES control object:\n")
+  print(as.call(c(alist(cmaes_control), cc_not_default)), ...)
+  invisible(x)
 }
 
 #' @title Covariance Matrix Adaptation Evolution Strategy
@@ -159,21 +177,23 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
 #'
 #' @param objective (`function(x)`)\cr
 #'   Objective function, to minimize.
-#'   If `batch` is `FALSE`, `x` is a numeric vector of length `n` = dim-of-x;
-#'   and the function must return a scalar double.
-#'   If `batch` is `TRUE`, `x` is a numeric matrix with `lambda` rows and `n` = dim-of-x columns.
+#'   If `batch` is `FALSE`, `x` is a numeric vector of length `n`
+#'   and the function must return a scalar `numeric`.
+#'   If `batch` is `TRUE`, `x` is a numeric matrix with `lambda` rows and `n` columns.
 #'   The function must return a numeric vector of length `lambda`.
 #'   The latter usually reduces overhead and allows you to orchestrate parallelization
 #'   yourself if you need it because the objective function is more expensive.
 #' @param x0 (`numeric(n)`)\cr
 #'   Initial point.
-#'   NB: This point is IGNORED if you also set `x0_lower` and `x0_upper`!
+#'   NB: This point is IGNORED if you also set `x0_lower` and `x0_upper` in the `control` object,
+#'   but it must still be a vector of length `n`!
 #' @param lower (`numeric(n)`)\cr
 #'   Lower bounds of search space.
 #' @param upper (`numeric(n)`)\cr
 #'   Upper bounds of search space.
 #' @param control (`cmaes_control`)\cr
 #'   A control object created by [cmaes_control()].
+#'   Default is a control object with all parameters set to their default values.
 #' @param batch (`logical(1)`)\cr
 #'   Whether the objective function evaluates a batch of points at once.
 #'   Default is `FALSE`.
@@ -191,7 +211,7 @@ cmaes_control = function(maximize = FALSE, algo = "acmaes",
 #'     See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 #' @useDynLib libcmaesr, .registration = TRUE
 #' @export
-cmaes = function(objective, x0, lower, upper, control, batch = FALSE) {
+cmaes = function(objective, x0, lower, upper, control = cmaes_control(), batch = FALSE) {
   assert_function(objective)
   assert_numeric(x0, min.len = 1, any.missing = FALSE, finite = TRUE)
   assert_numeric(lower, min.len = 1, any.missing = FALSE, finite = TRUE)
@@ -215,14 +235,15 @@ cmaes = function(objective, x0, lower, upper, control, batch = FALSE) {
   if (!is.null(control$x0_upper) && length(control$x0_upper) != length(upper)) {
     stop("'x0_upper' must have the same length as 'upper'!")
   }
-  if (!all(control$x0_lower < control$x0_upper)) {
-    stop("'x0_lower' must be strictly smaller than 'x0_upper'!")
-  }
   if (!all(control$x0_upper < upper)) {
     stop("'x0_upper' must be strictly smaller than 'upper'!")
   }
   if (!all(control$x0_lower > lower)) {
     stop("'x0_lower' must be strictly larger than 'lower'!")
+  }
+
+  if (is.na(control$seed)) {
+    control$seed = as.integer(runif(1, 1, .Machine$integer.max))
   }
 
   if (batch) {
