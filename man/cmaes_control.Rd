@@ -37,28 +37,29 @@ Default is "acmaes", as recommended by
 
 \item{max_fevals}{(\code{integer(1)})\cr
 The maximum number of function evaluations.
-NA to disable.}
+NA to disable.
+Default is 100.}
 
 \item{max_iter}{(\code{integer(1)})\cr
 The maximum number of ES iterations.
-NA to disable.}
+NA to disable (default).}
 
 \item{ftarget}{(\code{numeric(1)})\cr
 Stop when this target function value is reached.
-NA to disable.}
+NA to disable (default).}
 
 \item{f_tolerance}{(\code{numeric(1)})\cr
 Sets function tolerance as stopping criterion;
-monitors the difference in function value over iterations and
+monitors the (absolute) difference in function value over iterations and
 stops optimization when below tolerance.
-NA to disable.}
+NA to disable (default).}
 
 \item{x_tolerance}{(\code{numeric(1)})\cr
-Sets parameter tolerance as stopping criterion.
-NA to disable.}
+Sets parameter (absolute) tolerance as stopping criterion.
+NA to disable (default).}
 
 \item{lambda}{(\code{integer(1)})\cr
-Number of generated descendents per iteration.
+Number of generated descendants per iteration.
 Must be at least 2; NA for default handling by libcmaes.}
 
 \item{sigma}{(\code{numeric(1)})\cr
@@ -91,9 +92,10 @@ Sets tpa dsigma value, use with care.
 NA for default handling by libcmaes.}
 
 \item{seed}{(\code{integer(1)})\cr
-The seed for the random number generator. If \code{NA}, the seed is set to 0.
-NB: The RNG of the libcmaes is different to the one in R and is hence not subject to R's seeding.
-NA for default handling by libcmaes, time is used in libcmaes to seed.}
+The seed for the random number generator.
+If \code{NA} (default), the seed is generated randomly by R and thereby coupled to the RNG-state of R.
+Otherwise, the RNG of the libcmaes is different to the one in R and is hence not subject to R's seeding.
+Special value \code{0} is used for handling by libcmaes, where system time is used in libcmaes to seed.}
 
 \item{quiet}{(\code{logical(1)})\cr
 Whether to suppress libcmaes output.
@@ -101,12 +103,13 @@ Internal logging of libcmaes is rerouted to Rprintf, so things like
 capture.output() will work. Useful for debugging.
 Default is \code{TRUE}.}
 
-\item{x0_lower}{(\code{numeric(1)})\cr
+\item{x0_lower}{(\code{numeric})\cr
 Optional lower bounds for randomizing the initial mean \code{x0},
 also after restarts.
-Use \code{NULL} to disable.}
+Use \code{NULL} to disable.
+If this is non-\code{NULL}, \code{x0_upper} must also be set and have the same length as \code{x0_lower}.}
 
-\item{x0_upper}{(\code{numeric(1)})\cr
+\item{x0_upper}{(\code{numeric})\cr
 Optional upper bounds for randomizing the initial mean \code{x0},
 also after restarts.
 Use \code{NULL} to disable.}
