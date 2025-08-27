@@ -56,8 +56,16 @@ static double cached_fitfunc_impl(const double *x, int dim) {
     // create matrix with 1 row and eval in R
     SEXP s_x = RC_dblmat_create_init_PROTECT(1, dim, x);
     SEXP s_y = RC_tryeval_PROTECT(G_OBJ, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
+    // enforce numeric scalar return for single-row evaluation (batch fallback)
+    if (!Rf_isNumeric(s_y)) {
+      Rf_error("libcmaesr: objective must return a numeric vector (length 1) for single-row input.");
+    }
+    if (Rf_length(s_y) != 1) {
+      Rf_error("libcmaesr: objective must return length 1 for single-row input, got length %d.", Rf_length(s_y));
+    }
+    double yval = Rf_asReal(s_y);
     UNPROTECT(2); // s_x, s_y
-    return REAL(s_y)[0];
+    return yval;
   }
 }
 
@@ -79,6 +87,19 @@ static CMASolutions run_with_batch_eval(Strategy &strat, SEXP s_obj) {
 
     // call R once on the whole batch
     SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
+    // validate return: numeric vector of length lambda; coerce to REAL if needed
+    if (!Rf_isNumeric(s_y)) {
+      Rf_error("libcmaesr: objective must return a numeric vector of length %d.", lambda);
+    }
+    if (Rf_length(s_y) != lambda) {
+      Rf_error("libcmaesr: objective must return a numeric vector of length %d, got %d.", lambda, Rf_length(s_y));
+    }
+    int n_to_unprotect = 2; // s_x, s_y
+    if (!Rf_isReal(s_y)) {
+      SEXP s_y_real = PROTECT(Rf_coerceVector(s_y, REALSXP));
+      s_y = s_y_real;
+      n_to_unprotect = 3; // s_x, s_y_real, s_y (old)
+    }
 
     // populate cache: map phenotype column pointer -> fvalue
     G_EVAL_CACHE.reserve(lambda);
@@ -88,7 +109,7 @@ static CMASolutions run_with_batch_eval(Strategy &strat, SEXP s_obj) {
     }
     // delegate to internal eval to mirror all behaviors (UH, elitism, fevals, etc.)
     strat.eval(cands, phenocands);
-    UNPROTECT(2); // s_x, s_y
+    UNPROTECT(n_to_unprotect); // s_x, s_y, (+ old s_y if coerced)
   };
 
   AskFunc askf = [&]() { return strat.ask(); };
@@ -263,8 +284,15 @@ extern "C" SEXP c_cmaes_wrap_single(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_
     // setup R dbl vec, copy, eval, return
     SEXP s_x = RC_dblvec_create_init_PROTECT(n, x);
     SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
+    if (!Rf_isNumeric(s_y)) {
+      Rf_error("libcmaesr: objective must return a numeric scalar.");
+    }
+    if (Rf_length(s_y) != 1) {
+      Rf_error("libcmaesr: objective must return length 1, got %d.", Rf_length(s_y));
+    }
+    double yval = Rf_asReal(s_y);
     UNPROTECT(2); // s_x, s_y
-    return Rf_asReal(s_y);
+    return yval;
   };
 
   // now run via libcmaes::cmaes servive fun, easy
