@@ -1,6 +1,3 @@
-f_sphere_single = function(x) {
-  sum(row^2)
-}
 
 eval_log = NULL
 
@@ -39,8 +36,9 @@ test_that("single: finds minimum of sphere function", {
         ctx = sprintf("dim=%d, lambda=%s, algo=%s", dim, ifelse(is.na(lambda), "NA", lambda), algo)
         # basic structure checks
         expect_list(res)
-        expect_named(res, c("x", "y", "edm", "time", "status"), ignore.order = TRUE)
-        expect_int(res$status, lower = 0)
+        expect_named(res, c("x", "y", "edm", "time", "status_code", "status_msg"), ignore.order = TRUE)
+        expect_int(res$status_code, lower = 0)
+        expect_string(res$status_msg)
         # solution quality (should get very close to the optimum)
         expect_true(all(abs(res$x) < 1e-2), info = ctx)
         expect_lt(res$y, 1e-3)
@@ -90,7 +88,8 @@ test_that("single: maximize works", {
   obj = make_logged_sphere_single(dim, lambda = NA)
   ctrl = cmaes_control(max_fevals = 500, maximize = TRUE)
   res = cmaes(obj$fn, obj$x0, obj$lower, obj$upper, ctrl, batch = FALSE)
-  expect_int(res$status, lower = 0)
+  expect_int(res$status_code, lower = 0)
+  expect_string(res$status_msg)
   expect_true(all(abs(res$x) > 0.999))
   expect_gt(res$y, 1.9999)
 })
@@ -109,7 +108,7 @@ test_that("single: ftarget stops early and meets target", {
   res = cmaes(obj$fn, obj$x0, obj$lower, obj$upper, ctrl, batch = FALSE)
 
   expect_true(res$y <= ftarget + 1e-8)
-  expect_equal(res$status, 10) # ftarget status
+  expect_equal(res$status_code, 10) # ftarget status
   expect_gt(nrow(eval_log), 0)
   expect_lte(nrow(eval_log), 100) # should stop before budget is exhausted
 })
@@ -127,7 +126,8 @@ test_that("single: max_iter works", {
 
   # number of evaluations should be on the order of iterations * lambda (plus at most one extra batch)
   expect_lte(nrow(eval_log), lambda * (max_iter + 1))
-  expect_int(res$status, lower = 0)
+  expect_int(res$status_code, lower = 0)
+  expect_string(res$status_msg)
 })
 
 
@@ -162,10 +162,11 @@ test_that("single: elitism and tpa options run and return valid structure", {
         elitism = elitism, tpa = tpa, tpa_dsigma = if (tpa == 0L) NA_real_ else 0.1,
         seed = 5)
       res = cmaes(obj$fn, obj$x0, obj$lower, obj$upper, ctrl, batch = FALSE)
-      expect_named(res, c("x", "y", "edm", "time", "status"), ignore.order = TRUE)
+      expect_named(res, c("x", "y", "edm", "time", "status_code", "status_msg"), ignore.order = TRUE)
       expect_numeric(res$edm, lower = 0, any.missing = FALSE, len = 1)
       expect_numeric(res$time, lower = 0, any.missing = FALSE, len = 1)
-      expect_integer(res$status, lower = 0, len = 1)
+      expect_integer(res$status_code, lower = 0, len = 1)
+      expect_string(res$status_msg)
       expect_numeric(res$x, any.missing = FALSE, len = dim)
       expect_number(res$y)
     }
@@ -192,8 +193,9 @@ test_that("ipop/bipop non-batch logs show multiple restarts when budget allows",
     )
     p$wait()
     res = p$get_result()
-    expect_named(res, c("x", "y", "edm", "time", "status"), ignore.order = TRUE)
-    expect_integer(res$status, lower = 0, len = 1)
+    expect_named(res, c("x", "y", "edm", "time", "status_code", "status_msg"), ignore.order = TRUE)
+    expect_integer(res$status_code, lower = 0, len = 1)
+    expect_string(res$status_msg)
     out = p$read_output()
     n_restart = length(gregexpr("restart", out, ignore.case = TRUE)[[1]])
     expect_gte(n_restart, 2)  # should indicate multiple restarts in logs
@@ -214,4 +216,3 @@ test_that("single: x0 randomization accepts vector bounds and runs", {
   ee = eval_log
   expect_true(all(ee$x1 >= x0_lower[1] & ee$x1 <= x0_upper[1]))
 })
-
