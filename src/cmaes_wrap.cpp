@@ -28,6 +28,12 @@ FIXME:
   Other OpenMP regions (e.g., in genopheno.h and surrogate rankingsvm.hpp)
   don’t have a library-level switch, so use OMP_NUM_THREADS to control them.
 
+- libcmaes declares eigen as a external dep, we are shipping it, that is inconsistent :(
+  find_package (Eigen3 3.4.0 REQUIRED)
+  maybe we can force find_package to use our shipped eigen?
+
+ - not sure if i can user interrupt really
+
 - at least bipop seems to not respect max_fevals, opened an issue
 - provide readme with install instrauctions and minimal example
 - do speed test vs 1-2 other packages and maybe perf test
@@ -70,6 +76,9 @@ static CMASolutions run_with_batch_eval(Strategy &strat, SEXP s_obj) {
   EvalFunc evalf = [&](const dMat &cands, const dMat &phenocands) {
     const int dim = phenocands.rows();
     const int lambda = phenocands.cols();
+
+    // allow user interrupt before allocating/protecting
+    R_CheckUserInterrupt();
 
     // create lambda x dim matrix for R objective, fill with phenotype
     SEXP s_x = RC_dblmat_create_PROTECT(lambda, dim);
@@ -266,6 +275,8 @@ extern "C" SEXP c_cmaes_wrap_single(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_
 
   // scalar fitfunc, simple case
   FitFunc func = [&](const double *x, const int &n) -> double {
+    // allow user interrupt before allocating/protecting
+    R_CheckUserInterrupt();
     // setup R dbl vec, copy, eval, return
     SEXP s_x = RC_dblvec_create_init_PROTECT(n, x);
     SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err

@@ -1,4 +1,3 @@
-
 eval_log = NULL
 
 # helper to create a logged sphere objective with lambda-aware argument checks
