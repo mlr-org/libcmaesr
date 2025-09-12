@@ -1,9 +1,7 @@
 eval_log = NULL
 
 # helper to create a logged sphere objective with lambda-aware argument checks
-make_logged_sphere_single = function(dim, lambda,
-  lower = rep(-1, dim), upper = rep(1, dim), x0 = rep(0.5, dim)) {
-
+make_logged_sphere_single = function(dim, lambda, lower = rep(-1, dim), upper = rep(1, dim), x0 = rep(0.5, dim)) {
   eval_log <<- data.frame(matrix(NA, nrow = 0, ncol = dim + 1))
   names(eval_log) <<- c(sprintf("x%d", seq_len(dim)), "y")
 
@@ -28,8 +26,7 @@ test_that("single: finds minimum of sphere function", {
     for (lambda in c(3, NA)) {
       for (algo in cmaes_algos) {
         obj = make_logged_sphere_single(dim, lambda)
-        ctrl = cmaes_control(algo = algo, max_fevals = fevals, lambda = lambda, seed = seed,
-          max_restarts = 2L)
+        ctrl = cmaes_control(algo = algo, max_fevals = fevals, lambda = lambda, seed = seed, max_restarts = 2L)
         res = cmaes(obj$fn, obj$x0, obj$lower, obj$upper, ctrl, batch = FALSE)
 
         ctx = sprintf("dim=%d, lambda=%s, algo=%s", dim, ifelse(is.na(lambda), "NA", lambda), algo)
@@ -44,7 +41,7 @@ test_that("single: finds minimum of sphere function", {
         ee = eval_log
         # the log must have at least one evaluation and the right shape
         expect_gt(nrow(ee), 0)
-        expect_equal(ncol(ee), dim + 1)  # dim cols for x + 1 for y
+        expect_equal(ncol(ee), dim + 1) # dim cols for x + 1 for y
 
         # FIXME: bipop does not respect max_fevals, opened an issue
         if (algo %nin% c("bipop", "sepbipop", "vdbipopcma", "abipop")) {
@@ -73,9 +70,12 @@ test_that("single: works with exception in objective", {
   ctrl = cmaes_control(max_fevals = 10)
   msg = capture.output(type = "message", {
     x = capture.output(type = "output", {
-      expect_error({
-        cmaes(fn, x0, lower, upper, ctrl, batch = FALSE)
-      }, regexp = "libcmaesr: objective evaluation failed!")
+      expect_error(
+        {
+          cmaes(fn, x0, lower, upper, ctrl, batch = FALSE)
+        },
+        regexp = "libcmaesr: objective evaluation failed!"
+      )
     })
   })
   expect_string(msg, pattern = "foo")
@@ -102,8 +102,7 @@ test_that("single: ftarget stops early and meets target", {
   ftarget = 1
 
   obj = make_logged_sphere_single(dim, lambda)
-  ctrl = cmaes_control(algo = "cmaes", max_fevals = fevals, lambda = lambda, seed = 42,
-    ftarget = ftarget)
+  ctrl = cmaes_control(algo = "cmaes", max_fevals = fevals, lambda = lambda, seed = 42, ftarget = ftarget)
   res = cmaes(obj$fn, obj$x0, obj$lower, obj$upper, ctrl, batch = FALSE)
 
   expect_true(res$y <= ftarget + 1e-8)
@@ -157,9 +156,15 @@ test_that("single: elitism and tpa options run and return valid structure", {
   for (elitism in c(0L, 1L, 2L, 3L)) {
     for (tpa in c(0L, 1L, 2L)) {
       obj = make_logged_sphere_single(dim, lambda = 4)
-      ctrl = cmaes_control(algo = "cmaes", max_fevals = 20, lambda = 4,
-        elitism = elitism, tpa = tpa, tpa_dsigma = if (tpa == 0L) NA_real_ else 0.1,
-        seed = 5)
+      ctrl = cmaes_control(
+        algo = "cmaes",
+        max_fevals = 20,
+        lambda = 4,
+        elitism = elitism,
+        tpa = tpa,
+        tpa_dsigma = if (tpa == 0L) NA_real_ else 0.1,
+        seed = 5
+      )
       res = cmaes(obj$fn, obj$x0, obj$lower, obj$upper, ctrl, batch = FALSE)
       expect_named(res, c("x", "y", "edm", "time", "status_code", "status_msg"), ignore.order = TRUE)
       expect_numeric(res$edm, lower = 0, any.missing = FALSE, len = 1)
@@ -184,8 +189,15 @@ test_that("ipop/bipop non-batch logs show multiple restarts when budget allows",
         x0 = rep(0.5, dim)
         lower = rep(-1, dim)
         upper = rep(1, dim)
-        ctrl = cmaes_control(algo = algo, max_fevals = 300, max_iter = 10, lambda = 2,
-          max_restarts = 3, seed = 123, quiet = FALSE)
+        ctrl = cmaes_control(
+          algo = algo,
+          max_fevals = 300,
+          max_iter = 10,
+          lambda = 2,
+          max_restarts = 3,
+          seed = 123,
+          quiet = FALSE
+        )
         cmaes(fn, x0, lower, upper, ctrl, batch = FALSE)
       },
       args = list(algo = algo)
@@ -197,7 +209,7 @@ test_that("ipop/bipop non-batch logs show multiple restarts when budget allows",
     expect_integer(res$status_code, lower = 0, len = 1)
     expect_string(res$status_msg)
     n_restart = length(gregexpr("restart", out, ignore.case = TRUE)[[1]])
-    expect_gte(n_restart, 2)  # should indicate multiple restarts in logs
+    expect_gte(n_restart, 2) # should indicate multiple restarts in logs
   }
 })
 
@@ -209,8 +221,14 @@ test_that("single: x0 randomization accepts vector bounds and runs", {
   x0_lower = c(0.2, -0.2)
   x0_upper = c(0.3, -0.1)
   lambda = 10
-  ctrl = cmaes_control(max_fevals = 10L, seed = 999, sigma = 1e-6, lambda = lambda,
-    x0_lower = x0_lower, x0_upper = x0_upper)
+  ctrl = cmaes_control(
+    max_fevals = 10L,
+    seed = 999,
+    sigma = 1e-6,
+    lambda = lambda,
+    x0_lower = x0_lower,
+    x0_upper = x0_upper
+  )
   res = cmaes(obj$fn, obj$x0, obj$lower, obj$upper, ctrl, batch = FALSE)
   ee = eval_log
   expect_true(all(ee$x1 >= x0_lower[1] & ee$x1 <= x0_upper[1]))
@@ -219,7 +237,7 @@ test_that("single: x0 randomization accepts vector bounds and runs", {
 
 test_that("single: objective must return numeric scalar (type check)", {
   dim = 2
-  fn = function(x) "oops"  # wrong type
+  fn = function(x) "oops" # wrong type
   x0 = rep(0.5, dim)
   lower = rep(-1, dim)
   upper = rep(1, dim)
@@ -232,7 +250,7 @@ test_that("single: objective must return numeric scalar (type check)", {
 
 test_that("single: objective must return length 1 (length check)", {
   dim = 2
-  fn = function(x) c(1, 2)  # wrong length
+  fn = function(x) c(1, 2) # wrong length
   x0 = rep(0.5, dim)
   lower = rep(-1, dim)
   upper = rep(1, dim)

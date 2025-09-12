@@ -79,14 +79,25 @@
 #' @return A cmaes_control S3 object, which is a list with the passed arguments.
 #'
 #' @export
-cmaes_control = function(maximize = FALSE, algo = "acmaes",
-  max_fevals = 100, max_iter = NA_integer_, ftarget = NA_real_,
-  f_tolerance = NA_real_, x_tolerance = NA_real_,
-  lambda = NA_integer_, sigma = NA_real_, max_restarts = NA_integer_,
-  elitism = NA_integer_, tpa = NA_integer_, tpa_dsigma = NA_real_,
-  seed = NA_integer_, quiet = TRUE,
-  x0_lower = NULL, x0_upper = NULL) {
-
+cmaes_control = function(
+  maximize = FALSE,
+  algo = "acmaes",
+  max_fevals = 100,
+  max_iter = NA_integer_,
+  ftarget = NA_real_,
+  f_tolerance = NA_real_,
+  x_tolerance = NA_real_,
+  lambda = NA_integer_,
+  sigma = NA_real_,
+  max_restarts = NA_integer_,
+  elitism = NA_integer_,
+  tpa = NA_integer_,
+  tpa_dsigma = NA_real_,
+  seed = NA_integer_,
+  quiet = TRUE,
+  x0_lower = NULL,
+  x0_upper = NULL
+) {
   assert_flag(maximize)
   assert_choice(algo, cmaes_algos)
   max_fevals = asInt(max_fevals, lower = 1, na.ok = TRUE)
@@ -252,4 +263,3 @@ cmaes = function(objective, x0, lower, upper, control = cmaes_control(), batch =
     .Call("c_cmaes_wrap_single", objective, x0, lower, upper, control, PACKAGE = "libcmaesr")
   }
 }
-

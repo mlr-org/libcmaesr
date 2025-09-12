@@ -1,16 +1,16 @@
-REG_PATH = "benchmarks/registry"
+expsetup_reg_path = "benchmarks/registry"
 
-FLOG_SIZE = 10000
+expsetup_flog_size = 10000
 
-DIMS = 5
-FIDS = 1:24
-IIDS = 1:3
-REPLS = 4L
-MAX_FEVALS = 5000
-MAX_ITERS = 500
+expsetup_dims = 5
+expsetup_fids = 1:24
+expsetup_iids = 1:3
+expsetup_reps = 4L
+expsetup_max_fevals = 5000
+expsetup_max_iters = 500
 
 
-GET_RESULT = function(loggedfun, ybest) {
+get_result = function(loggedfun, ybest) {
   ys = environment(loggedfun)$obj.vals
   ys = as.numeric(ys)
   max_idx = environment(loggedfun)$curr.idx

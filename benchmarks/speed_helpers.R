@@ -1,12 +1,13 @@
 library(libcmaesr)
 library(cmaes)
 library(data.table)
+library(smoof)
 
 check_fevals = function(smoof_fun, budget, lambda) {
   assert_class(smoof_fun, "smoof_counting_function")
   nevals = getNumberOfEvaluations(smoof_fun)
   print(nevals)
-  if (nevals < budget - lambda*10 || nevals > budget + lambda*10) {
+  if (nevals < budget - lambda * 10 || nevals > budget + lambda * 10) {
     stop("maxfevals not respected")
   }
   resetEvaluationCounter(smoof_fun)
@@ -69,34 +70,40 @@ run_speedtest = function(obj_single, obj_batch, dim, budget, reps, do_check) {
 
     print("Running cmaes single")
     cmaes_ctrl$vectorized = FALSE
-    cmaes_single = tryCatch({
-      system.time({
-        cmaes::cma_es(
-          par = x0,
-          fn = obj_single,
-          lower = lower,
-          upper = upper,
-          control = cmaes_ctrl
-        )
-      })["elapsed"]
-    }, error = function(e) NA)
+    cmaes_single = tryCatch(
+      {
+        system.time({
+          cmaes::cma_es(
+            par = x0,
+            fn = obj_single,
+            lower = lower,
+            upper = upper,
+            control = cmaes_ctrl
+          )
+        })["elapsed"]
+      },
+      error = function(e) NA
+    )
     if (do_check && !is.na(cmaes_single)) {
       check_fevals(obj_single, budget, lambda)
     }
 
     print("Running cmaes batch")
     cmaes_ctrl$vectorized = TRUE
-    cmaes_batch = tryCatch({
-    system.time({
-      cmaes::cma_es(
-        par = x0,
-        fn = obj_batch,
-        lower = lower,
-        upper = upper,
-        control = cmaes_ctrl
-        )
-      })["elapsed"]
-    }, error = function(e) NA)
+    cmaes_batch = tryCatch(
+      {
+        system.time({
+          cmaes::cma_es(
+            par = x0,
+            fn = obj_batch,
+            lower = lower,
+            upper = upper,
+            control = cmaes_ctrl
+          )
+        })["elapsed"]
+      },
+      error = function(e) NA
+    )
 
     row = data.table(
       rep = r,
@@ -111,4 +118,3 @@ run_speedtest = function(obj_single, obj_batch, dim, budget, reps, do_check) {
   }
   results
 }
-

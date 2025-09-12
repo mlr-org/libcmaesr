@@ -13,11 +13,13 @@ res$repl = jt$repl
 print(res)
 
 # Unnest ys into long format and compute cumulative min per job
-long = res[, {
-  y = as.numeric(ys[[1]])
-  data.table(eval = seq_along(y), y = y,
-    algorithm = algorithm, dim = dim, fid = fid, iid = iid, repl = repl)
-}, by = .(job.id)]
+long = res[,
+  {
+    y = as.numeric(ys[[1]])
+    data.table(eval = seq_along(y), y = y, algorithm = algorithm, dim = dim, fid = fid, iid = iid, repl = repl)
+  },
+  by = .(job.id)
+]
 
 long[, ybest := cummin(y), by = job.id]
 
@@ -31,7 +33,7 @@ avg_long = plot_long[, .(ybest_mean = mean(ybest, na.rm = TRUE)), by = .(algorit
 p = ggplot(avg_long, aes(x = eval, y = ybest_mean, color = algorithm)) +
   geom_line() +
   scale_y_log10() +
-  facet_wrap(~ fid, scales = "free") +
+  facet_wrap(~fid, scales = "free") +
   labs(x = "Evals", y = "y (mean cummin across repls & iids)") +
   theme_bw() +
   theme(legend.position = "bottom")
