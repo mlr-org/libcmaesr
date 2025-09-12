@@ -6,6 +6,7 @@ The project writes a lightweight C/C++ wrapper around the c++ templated library 
 We dont use RCPP.
 
 Respect the .lintr file for the generated R code.
+Do not remove code comments if not really necessary.
 
 @.lintr
 

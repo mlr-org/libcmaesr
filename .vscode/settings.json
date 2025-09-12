@@ -1,0 +1,40 @@
+{
+
+  // ********** General settings **********
+  // Hide attic from Explorer and editor features
+  // "files.exclude": {
+  //   "attic/**": true
+  // },
+  // // Exclude attic from global search (Ctrl+Shift+F) and Quick Open
+  // "search.exclude": {
+  //   "attic/**": true
+  // },
+
+
+  // ********** settings git / gitlens **********
+
+  // disable "blame hover", to remove visual noise
+ "gitlens.currentLine.enabled": false,
+
+
+ // ********** settings for R *************
+
+  // format on save so we dont have to manually format, use AIR for formatting
+  "[r]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "Posit.air-vscode",
+    // disable hover for R, to remove visual noise
+    "editor.hover.enabled": false
+  },
+  // disable diagnostics for R, because of the dreaded normalizePath error
+  //"r.lsp.diagnostics": false,
+
+
+  // ********** settings for C / C++ **********
+
+  "[c,cpp]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+  }
+}
+
