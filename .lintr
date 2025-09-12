@@ -5,4 +5,4 @@ linters: lintr::linters_with_defaults(
  line_length_linter = NULL,
  return_linter = NULL
   )
-exclusions: list("src", "bbob.v15.03")
+exclusions: list("src", ".Rhistory")

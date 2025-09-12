@@ -6,7 +6,10 @@ make_logged_sphere_batch = function(dim, algo, lambda, lower = rep(-1, dim), upp
   names(eval_log) <<- c(sprintf("x%d", seq_len(dim)), "y")
 
   fn = function(x) {
-    if (!is.na(lambda) && algo %nin% c("ipop", "sepipop", "aipop", "bipop", "sepbipop", "vdbipopcma", "abipop")) {
+    if (
+      !is.na(lambda) &&
+        algo %nin% c("ipop", "sepipop", "aipop", "sepaipop", "bipop", "sepbipop", "sepabipop", "vdbipopcma", "abipop")
+    ) {
       assert_matrix(x, nrows = lambda, ncols = dim)
     } else {
       assert_matrix(x, ncols = dim)
@@ -50,7 +53,9 @@ test_that("cmaes finds minimum of sphere function", {
         expect_equal(ncol(ee), dim + 1) # dim cols for x + 1 for y
 
         # FIXME: bipop does not respect max_fevals, opened an issue
-        if (algo %nin% c("bipop", "sepbipop", "vdbipopcma", "abipop", "ipop", "sepipop", "aipop")) {
+        if (
+          algo %nin% c("bipop", "sepbipop", "sepabipop", "vdbipopcma", "abipop", "ipop", "sepipop", "aipop", "sepaipop")
+        ) {
           expect_true(nrow(ee) <= fevals + 20, info = ctx) # last pop could be over fevals
         }
 

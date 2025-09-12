@@ -44,7 +44,7 @@ test_that("single: finds minimum of sphere function", {
         expect_equal(ncol(ee), dim + 1) # dim cols for x + 1 for y
 
         # FIXME: bipop does not respect max_fevals, opened an issue
-        if (algo %nin% c("bipop", "sepbipop", "vdbipopcma", "abipop")) {
+        if (algo %nin% c("bipop", "sepbipop", "sepabipop", "vdbipopcma", "abipop")) {
           expect_true(nrow(ee) <= fevals + 10, info = ctx)
         }
 
@@ -58,7 +58,6 @@ test_that("single: finds minimum of sphere function", {
     }
   }
 })
-
 
 test_that("single: works with exception in objective", {
   dim = 2
@@ -81,7 +80,6 @@ test_that("single: works with exception in objective", {
   expect_string(msg, pattern = "foo")
 })
 
-
 test_that("single: maximize works", {
   dim = 2
   obj = make_logged_sphere_single(dim, lambda = NA)
@@ -92,7 +90,6 @@ test_that("single: maximize works", {
   expect_true(all(abs(res$x) > 0.999))
   expect_gt(res$y, 1.9999)
 })
-
 
 test_that("single: ftarget stops early and meets target", {
   set.seed(1)
@@ -111,7 +108,6 @@ test_that("single: ftarget stops early and meets target", {
   expect_lte(nrow(eval_log), 100) # should stop before budget is exhausted
 })
 
-
 test_that("single: max_iter works", {
   dim = 2
   lambda = 4
@@ -127,7 +123,6 @@ test_that("single: max_iter works", {
   expect_int(res$status_code, lower = 0)
   expect_string(res$status_msg)
 })
-
 
 test_that("single: seed reproducibility", {
   dim = 3
@@ -149,7 +144,6 @@ test_that("single: seed reproducibility", {
   expect_false(isTRUE(all.equal(res1$y, res3$y, tolerance = 1e-12)))
   expect_false(isTRUE(all.equal(res1$x, res3$x, tolerance = 1e-12)))
 })
-
 
 test_that("single: elitism and tpa options run and return valid structure", {
   dim = 2
@@ -176,7 +170,6 @@ test_that("single: elitism and tpa options run and return valid structure", {
     }
   }
 })
-
 
 test_that("ipop/bipop non-batch logs show multiple restarts when budget allows", {
   library(callr)
@@ -233,7 +226,6 @@ test_that("single: x0 randomization accepts vector bounds and runs", {
   ee = eval_log
   expect_true(all(ee$x1 >= x0_lower[1] & ee$x1 <= x0_upper[1]))
 })
-
 
 test_that("single: objective must return numeric scalar (type check)", {
   dim = 2
