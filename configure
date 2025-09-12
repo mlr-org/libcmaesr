@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+set -e
+
+# ----------------------------------------------------------------------------
+# This configure script runs during R package build/install.
+# It discovers a usable Eigen3 installation and writes the needed compiler
+# include flags into src/Makevars so our C++ files can include Eigen headers.
+#
+# Policy:
+# - Use a system-provided Eigen3 (pkg-config first, then CMake find-package).
+# ----------------------------------------------------------------------------
+
+# Try pkg-config first
+EIGEN_CFLAGS="$(pkg-config --cflags eigen3 2>/dev/null || true)"
+
+# Optional: try CMake as a fallback if pkg-config not found
+if [ -z "$EIGEN_CFLAGS" ]; then
+  EIGEN_CFLAGS="$(cmake --find-package -DNAME=Eigen3 -DCOMPILER_ID=GNU -DLANGUAGE=CXX -DMODE=COMPILE 2>/dev/null || true)"
+fi
+
+# If neither method succeeded, stop with a helpful message and instructions.
+if [ -z "$EIGEN_CFLAGS" ]; then
+  echo "ERROR: Eigen3 not found via pkg-config or CMake."
+  echo "       Please install Eigen and ensure it is discoverable."
+  echo ""
+  echo "       Alternatively, set PKG_CONFIG_PATH so 'pkg-config --cflags eigen3' works,"
+  echo "       or export CMAKE_PREFIX_PATH so 'cmake --find-package -DNAME=Eigen3 ...' can find it."
+  exit 1
+else
+  echo "Using system Eigen: $EIGEN_CFLAGS"
+fi
+
+# Write Makevars.eigen:
+echo "PKG_CPPFLAGS += $EIGEN_CFLAGS" > src/Makevars.eigen

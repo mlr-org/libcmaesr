@@ -1,5 +1,6 @@
 #' @import checkmate
 #' @import mlr3misc
+#' @importFrom stats runif
 "_PACKAGE"
 
 

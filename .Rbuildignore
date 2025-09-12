@@ -1,4 +1,5 @@
 
+^\.air.toml$
 ^\.clangd$
 ^\.clang-format$
 ^\.cursor$

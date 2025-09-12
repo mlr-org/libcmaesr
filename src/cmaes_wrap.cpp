@@ -48,6 +48,48 @@ FIXME:
 - support unbounded problems
 - allow setting gradients
 
+
+── R CMD check results ────────────────────────────────────────────────────────────────────────────────────────────────── libcmaesr 0.1 ────
+Duration: 3m 25.2s
+
+❯ checking compilation flags in Makevars ... WARNING
+  Non-portable flags in variable 'PKG_CXXFLAGS':
+    -Wno-unknown-pragmas
+
+❯ checking for GNU extensions in Makefiles ... WARNING
+  Found the following file(s) containing GNU extensions:
+    src/libcmaes/build/Makefile
+    src/libcmaes/build/src/Makefile
+  Portable Makefiles do not use GNU extensions such as +=, :=, $(shell),
+  $(wildcard), ifeq ... endif, .NOTPARALLEL See section ‘Writing portable
+  packages’ in the ‘Writing R Extensions’ manual.
+
+❯ checking compilation flags used ... WARNING
+  Compilation used the following non-portable flag(s):
+    ‘-Wno-unknown-pragmas’ ‘-mno-omit-leaf-frame-pointer’
+  including flag(s) suppressing warnings
+
+
+❯ checking pragmas in C/C++ headers and code ... NOTE
+  File which contains pragma(s) suppressing diagnostics:
+    ‘inst/include/Eigen/src/Core/util/DisableStupidWarnings.h’
+
+❯ checking compiled code ... NOTE
+  File ‘libcmaesr/libs/libcmaesr.so’:
+    Found ‘_ZSt4cerr’, possibly from ‘std::cerr’ (C++)
+      Object: ‘libcmaes/build/src/libcmaes.a’
+    Found ‘rand’, possibly from ‘rand’ (C)
+      Object: ‘libcmaes/build/src/libcmaes.a’
+
+  Compiled code should not call entry points which might terminate R nor
+  write to stdout/stderr instead of to the console, nor use Fortran I/O
+  nor system RNGs nor [v]sprintf.
+
+  See ‘Writing portable packages’ in the ‘Writing R Extensions’ manual.
+
+
+
+
 */
 
 // FitFunc that looks up precomputed fvalues from the cache; falls back to single-point R eval

@@ -1,20 +1,19 @@
 
-# Output files from R CMD build
-/*.tar.gz
-# Output files from R CMD check
-/*.Rcheck/
-# RStudio files
-.Rproj.user/
 # OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
 .httr-oauth
 
-# R
+# src build files
 src/*.o
 src/*.so
 src/*.dll
-.Rhistory
-**/.Rhistory
+src/Makevars.eigen
 
+# temp R stuff
+.Rhistory
+/*.Rcheck/
+libcmaesr*.tar.gz
+
+# temp stuff in tests
 /cpp-tests/test_ipop_max_fevals
 /cpp-tests/test_bipop_max_fevals
 /benchmarks/registry/
