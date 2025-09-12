@@ -1,4 +1,7 @@
 
+# use c++11; matches libcmaes
+CXX_STD = CXX11
+
 # libcmaes.a static library, built after its cmake build
 LIBCMAES = libcmaes/build/src/libcmaes.a
 # linker flags for our SHLIB

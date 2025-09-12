@@ -16,6 +16,10 @@ static SEXP G_OBJ;
 
 /*
 FIXME:
+
+- we might have to remnove this from makevars, not portable and warnings in R CMD check
+  PKG_CXXFLAGS += -Wno-unknown-pragmas
+
 - we currently have a fork of libcmaes with 2 branches:
   - r-changes: overwites cout logging to Rprintf
   - feat-bipop-budgets: budget fixes for bipop and ipop
