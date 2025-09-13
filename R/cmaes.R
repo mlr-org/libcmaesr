@@ -217,8 +217,10 @@ print.cmaes_control = function(x, ...) {
 #'     Expected distance to the minimum.
 #'   - 'time': (`numeric(1)`)\cr
 #'     The time taken to find the solution in seconds.
-#'   - 'status': (`integer(1)`)\cr
+#'   - 'status_code': (`integer(1)`)\cr
 #'     The status code, indicating success, failure, or the reason for stopping.
+#'   - 'status_msg': (`character(1)`)\cr
+#'     A human-readable status message from libcmaes.
 #'     See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 #' @useDynLib libcmaesr, .registration = TRUE
 #' @export
