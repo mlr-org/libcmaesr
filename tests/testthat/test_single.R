@@ -42,11 +42,7 @@ test_that("single: finds minimum of sphere function", {
         # the log must have at least one evaluation and the right shape
         expect_gt(nrow(ee), 0)
         expect_equal(ncol(ee), dim + 1) # dim cols for x + 1 for y
-
-        # FIXME: bipop does not respect max_fevals, opened an issue
-        if (algo %nin% c("bipop", "sepbipop", "sepabipop", "vdbipopcma", "abipop")) {
-          expect_true(nrow(ee) <= fevals + 10, info = ctx)
-        }
+        expect_true(nrow(ee) <= fevals + 10, info = ctx)
 
         # all x-evaluations must be within [lower, upper]
         ee$y = NULL
