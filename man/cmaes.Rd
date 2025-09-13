@@ -46,8 +46,10 @@ The objective value of the best point.
 Expected distance to the minimum.
 \item 'time': (\code{numeric(1)})\cr
 The time taken to find the solution in seconds.
-\item 'status': (\code{integer(1)})\cr
+\item 'status_code': (\code{integer(1)})\cr
 The status code, indicating success, failure, or the reason for stopping.
+\item 'status_msg': (\code{character(1)})\cr
+A human-readable status message from libcmaes.
 See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 }
 }
