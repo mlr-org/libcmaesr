@@ -17,8 +17,22 @@ static SEXP G_OBJ;
 /*
 FIXME:
 
+
+- should be able to reactivate the unizt tests for ipop bibop with budget problems
+
+- if i runt the unit tests, results dont seem to be completely deterministic although i seed them?
+ that is a problem.....
+ i could see this here
+ ⠦ |        747 | single                                                                                                                     [1] "dim=3, lambda=NA, algo=vdbipopcma"
+[1] -0.001244280  0.010468126  0.005541255
+[1] 0.0001418354
+✖ | 1      871 | single [15.4s]
+
+
 - we might have to remnove this from makevars, not portable and warnings in R CMD check
   PKG_CXXFLAGS += -Wno-unknown-pragmas
+
+- open issue to overwrite logger better / no exit
 
 - we currently have a fork of libcmaes with 2 branches:
   - r-changes: overwites cout logging to Rprintf
@@ -31,10 +45,6 @@ FIXME:
   the population evaluation and finite-difference gradient loops specifically.
   Other OpenMP regions (e.g., in genopheno.h and surrogate rankingsvm.hpp)
   don’t have a library-level switch, so use OMP_NUM_THREADS to control them.
-
-- libcmaes declares eigen as a external dep, we are shipping it, that is inconsistent :(
-  find_package (Eigen3 3.4.0 REQUIRED)
-  maybe we can force find_package to use our shipped eigen?
 
  - not sure if i can user interrupt really
 
@@ -73,10 +83,6 @@ Duration: 3m 25.2s
     ‘-Wno-unknown-pragmas’ ‘-mno-omit-leaf-frame-pointer’
   including flag(s) suppressing warnings
 
-
-❯ checking pragmas in C/C++ headers and code ... NOTE
-  File which contains pragma(s) suppressing diagnostics:
-    ‘inst/include/Eigen/src/Core/util/DisableStupidWarnings.h’
 
 ❯ checking compiled code ... NOTE
   File ‘libcmaesr/libs/libcmaesr.so’:
