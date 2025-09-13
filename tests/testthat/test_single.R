@@ -1,5 +1,8 @@
 eval_log = NULL
 
+res_names = c("x", "y", "edm", "time", "status_code", "status_msg")
+#res_names = c("x", "y", "edm", "time", "status_code", "status_msg", "fevals")
+
 # helper to create a logged sphere objective with lambda-aware argument checks
 make_logged_sphere_single = function(dim, lambda, lower = rep(-1, dim), upper = rep(1, dim), x0 = rep(0.5, dim)) {
   eval_log <<- data.frame(matrix(NA, nrow = 0, ncol = dim + 1))
@@ -32,7 +35,7 @@ test_that("single: finds minimum of sphere function", {
         ctx = sprintf("dim=%d, lambda=%s, algo=%s", dim, ifelse(is.na(lambda), "NA", lambda), algo)
         # basic structure checks
         expect_list(res)
-        expect_named(res, c("x", "y", "edm", "time", "status_code", "status_msg"), ignore.order = TRUE)
+        expect_named(res, res_names, ignore.order = TRUE)
         expect_int(res$status_code, lower = 0)
         expect_string(res$status_msg)
         # solution quality (should get very close to the optimum)
@@ -43,6 +46,8 @@ test_that("single: finds minimum of sphere function", {
         expect_gt(nrow(ee), 0)
         expect_equal(ncol(ee), dim + 1) # dim cols for x + 1 for y
         expect_true(nrow(ee) <= fevals + 10, info = ctx)
+        # FIXME: reenable this once libcmaes is fixed
+        #expect_equal(res$fevals, nrow(ee), info = ctx)
 
         # all x-evaluations must be within [lower, upper]
         ee$y = NULL
@@ -156,7 +161,7 @@ test_that("single: elitism and tpa options run and return valid structure", {
         seed = 5
       )
       res = cmaes(obj$fn, obj$x0, obj$lower, obj$upper, ctrl, batch = FALSE)
-      expect_named(res, c("x", "y", "edm", "time", "status_code", "status_msg"), ignore.order = TRUE)
+      expect_named(res, res_names, ignore.order = TRUE)
       expect_numeric(res$edm, lower = 0, any.missing = FALSE, len = 1)
       expect_numeric(res$time, lower = 0, any.missing = FALSE, len = 1)
       expect_integer(res$status_code, lower = 0, len = 1)
@@ -194,7 +199,7 @@ test_that("ipop/bipop non-batch logs show multiple restarts when budget allows",
     out = p$read_all_output()
     p$wait()
     res = p$get_result()
-    expect_named(res, c("x", "y", "edm", "time", "status_code", "status_msg"), ignore.order = TRUE)
+    expect_named(res, res_names, ignore.order = TRUE)
     expect_integer(res$status_code, lower = 0, len = 1)
     expect_string(res$status_msg)
     n_restart = length(gregexpr("restart", out, ignore.case = TRUE)[[1]])

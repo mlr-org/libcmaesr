@@ -1,3 +1,6 @@
+res_names = c("x", "y", "edm", "time", "status_code", "status_msg")
+#res_names = c("x", "y", "edm", "time", "status_code", "status_msg", "fevals")
+
 eval_log = NULL
 
 # helper to create a logged sphere objective with lambda-aware argument checks
@@ -40,24 +43,31 @@ test_that("cmaes finds minimum of sphere function", {
         ee = eval_log
 
         # basic structure checks
-        expect_list(res)
-        expect_named(res, c("x", "y", "edm", "time", "status_code", "status_msg"), ignore.order = TRUE)
-        expect_int(res$status_code, lower = 0)
-        expect_string(res$status_msg)
-        expect_true(all(abs(res$x) < 1e-3))
+        expect_list(res, info = ctx)
+        expect_named(
+          res,
+          res_names,
+          ignore.order = TRUE,
+          info = ctx
+        )
+        expect_int(res$status_code, lower = 0, info = ctx)
+        expect_string(res$status_msg, info = ctx)
+        expect_true(all(abs(res$x) < 1e-3), info = ctx)
         # solution quality (should get very close to the optimum)
         expect_lt(res$y, 1e-6)
 
         # the log must have at least one evaluation and the right shape
         expect_gt(nrow(ee), 0)
-        expect_equal(ncol(ee), dim + 1) # dim cols for x + 1 for y
+        expect_equal(ncol(ee), dim + 1, info = ctx) # dim cols for x + 1 for y
         expect_true(nrow(ee) <= fevals + 20, info = ctx) # last pop could be over fevals
+        # FIXME: remove this once libcmaes is fixed
+        #expect_equal(res$fevals, nrow(ee), info = ctx)
 
         # all x-evaluations must be within [lower, upper]
         ee$y = NULL
         for (k in seq_len(dim)) {
-          expect_true(all(ee[, k] >= obj$lower[k]))
-          expect_true(all(ee[, k] <= obj$upper[k]))
+          expect_true(all(ee[, k] >= obj$lower[k]), info = ctx)
+          expect_true(all(ee[, k] <= obj$upper[k]), info = ctx)
         }
       }
     }
@@ -180,7 +190,7 @@ test_that("elitism and tpa options run and return valid structure", {
         seed = 5
       )
       res = cmaes(f_sphere, x0, lower, upper, ctrl, batch = TRUE)
-      expect_named(res, c("x", "y", "edm", "time", "status_code", "status_msg"), ignore.order = TRUE)
+      expect_named(res, res_names, ignore.order = TRUE)
       expect_numeric(res$edm, lower = 0, any.missing = FALSE, len = 1)
       expect_numeric(res$time, lower = 0, any.missing = FALSE, len = 1)
       expect_integer(res$status_code, lower = 0, len = 1)

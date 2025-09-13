@@ -224,9 +224,11 @@ print.cmaes_control = function(x, ...) {
 #'     The time taken to find the solution in seconds.
 #'   - 'status_code': (`integer(1)`)\cr
 #'     The status code, indicating success, failure, or the reason for stopping.
+#'     See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 #'   - 'status_msg': (`character(1)`)\cr
 #'     A human-readable status message from libcmaes.
-#'     See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
+#   - 'fevals': (`integer(1)`)\cr
+#     The number of function evaluations.
 #' @useDynLib libcmaesr, .registration = TRUE
 #' @export
 cmaes = function(objective, x0, lower, upper, control = cmaes_control(), batch = FALSE) {

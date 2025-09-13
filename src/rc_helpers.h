@@ -77,6 +77,7 @@ SEXP RC_list_get_el_by_name(SEXP s_list, const char *name);
 // // set list elements by index
 SEXP RC_list_set_el_intscalar(SEXP s_list, int idx, int x);
 SEXP RC_list_set_el_dblscalar(SEXP s_list, int idx, double x);
+SEXP RC_list_set_el_string(SEXP s_list, int idx, const char *x);
 
 // ********** data.frame **********
 

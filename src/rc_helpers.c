@@ -137,6 +137,11 @@ SEXP RC_list_set_el_dblscalar(SEXP s_list, int idx, double x) {
   return s_list;
 }
 
+SEXP RC_list_set_el_string(SEXP s_list, int idx, const char *x) {
+  SET_VECTOR_ELT(s_list, idx, Rf_mkString(x)); // dont need to protect here
+  return s_list;
+}
+
 // ********** data.frame **********
 
 R_xlen_t RC_df_get_nrows(SEXP s_dt) {
