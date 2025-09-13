@@ -12,6 +12,7 @@
 #'   Possible values are: [cmaes_algos].
 #'   Default is "acmaes", as recommended by
 #'   \url{https://github.com/CMA-ES/libcmaes/wiki/Practical-hints}.
+#'   For multimodal problems, you likely want to use "ipop" or "bipop".
 #' @param max_fevals (`integer(1)`)\cr
 #'   The maximum number of function evaluations.
 #'   NA to disable.
@@ -29,6 +30,7 @@
 #'   NA to disable (default).
 #' @param x_tolerance (`numeric(1)`)\cr
 #'   Sets parameter (absolute) tolerance as stopping criterion.
+#'   This checks entries of the covariance matrix, only touch when you know what you are doing.
 #'   NA to disable (default).
 #' @param lambda (`integer(1)`)\cr
 #'   Number of generated descendants per iteration.
@@ -102,7 +104,7 @@ cmaes_control = function(
   assert_choice(algo, cmaes_algos)
   max_fevals = asInt(max_fevals, lower = 1, na.ok = TRUE)
   max_iter = asInt(max_iter, lower = 1, na.ok = TRUE)
-  assert_number(ftarget, lower = 0, na.ok = TRUE)
+  assert_number(ftarget, na.ok = TRUE)
   assert_number(f_tolerance, lower = 0, na.ok = TRUE)
   assert_number(x_tolerance, lower = 0, na.ok = TRUE)
   lambda = asInt(lambda, lower = 2, na.ok = TRUE)
@@ -184,7 +186,10 @@ print.cmaes_control = function(x, ...) {
 #'
 #' 5. Setting gradients is currently not supported.
 #'
-#' Read more details here: \url{https://github.com/CMA-ES/libcmaes/wiki/Defining-and-using-bounds-on-parameters}.
+#' 6. OpenMP is currently not supported. libcmaes uses OpenMP for the population evaluation mainly, but also for some Eigen stuff.
+#' Calling into the R Api via threading is not allowed, which would happen in the former.
+#'
+#' In general, more details can be found here: \url{https://github.com/CMA-ES/libcmaes/wiki/}.
 #'
 #' @param objective (`function(x)`)\cr
 #'   Objective function, to minimize.

@@ -17,6 +17,7 @@ static SEXP G_OBJ;
 /*
 FIXME:
 
+- in clang-format exlude the libcmaes src dirs
 
 - should be able to reactivate the unizt tests for ipop bibop with budget problems
 
@@ -47,6 +48,8 @@ FIXME:
   don’t have a library-level switch, so use OMP_NUM_THREADS to control them.
 
  - not sure if i can user interrupt really
+
+ - we need to ensure that destructors are properly called on exit / exceptoion / imzterrupt
 
 - at least bipop seems to not respect max_fevals, opened an issue
 - provide readme with install instrauctions and minimal example
