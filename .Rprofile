@@ -30,3 +30,16 @@ if (interactive()) {
   # Define some global settings
   options(width = 150)
 }
+
+# Hotfix languageserver: ignore virtual URIs for diagnostics
+ns = asNamespace("languageserver")
+orig = get("diagnose_file", envir = ns)
+my_diagnose_file = function(uri, content, is_rmarkdown = FALSE, globals = NULL, cache = FALSE) {
+  if (grepl("^(git:|vscode-|gitlens:|scm:)", uri)) {
+    return(list())
+  }
+  orig(uri, content, is_rmarkdown, globals, cache)
+}
+unlockBinding("diagnose_file", ns)
+assign("diagnose_file", my_diagnose_file, envir = ns)
+lockBinding("diagnose_file", ns)
