@@ -328,22 +328,29 @@ extern "C" SEXP c_cmaes_wrap_single(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_
   MyCMAParameters &cmaparams = setup.first;
   MyGenoPheno &gp = setup.second;
 
-  // scalar fitfunc, simple case
   FitFunc func = [&](const double *x, const int &n) -> double {
     // allow user interrupt before allocating/protecting
     R_CheckUserInterrupt();
-    // now run via libcmaes::cmaes servive fun, easy
-    CMASolutions sols = cmaes<MyGenoPheno>(func, cmaparams);
-    // max_mult and manual pheno not needed for single
-    return create_SEXP_result(sols, gp, cmaparams);
-  }
+    // setup R dbl vec, copy, eval, return
+    SEXP s_x = RC_dblvec_create_init_PROTECT(n, x);
+    SEXP s_y = RC_tryeval_PROTECT(s_obj, s_x, "libcmaesr: objective evaluation failed!", 1); // unprotect s_x on err
+    RC_check_numeric_vector(s_y, 1);
+    double yval = Rf_asReal(s_y);
+    UNPROTECT(2); // s_x, s_y
+    return yval;
+  };
 
-  extern "C" SEXP
-  c_cmaes_wrap_batch(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
-    std::pair<MyCMAParameters, MyGenoPheno> setup = cmaes_setup(s_x0, s_lower, s_upper, s_ctrl);
-    MyCMAParameters &cmaparams = setup.first;
-    MyGenoPheno &gp = setup.second;
-    G_OBJ = s_obj;
-    CMASolutions sols = dispatch_with_batch_eval(cmaparams, s_obj);
-    return create_SEXP_result(sols, gp, cmaparams);
-  }
+  // now run via libcmaes::cmaes servive fun, easy
+  CMASolutions sols = cmaes<MyGenoPheno>(func, cmaparams);
+  // max_mult and manual pheno not needed for single
+  return create_SEXP_result(sols, gp, cmaparams);
+}
+
+extern "C" SEXP c_cmaes_wrap_batch(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
+  std::pair<MyCMAParameters, MyGenoPheno> setup = cmaes_setup(s_x0, s_lower, s_upper, s_ctrl);
+  MyCMAParameters &cmaparams = setup.first;
+  MyGenoPheno &gp = setup.second;
+  G_OBJ = s_obj;
+  CMASolutions sols = dispatch_with_batch_eval(cmaparams, s_obj);
+  return create_SEXP_result(sols, gp, cmaparams);
+}
