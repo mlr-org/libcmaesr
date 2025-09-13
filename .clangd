@@ -1,19 +1,10 @@
 CompileFlags:
-  # Add R include paths - these are typical locations
+  # Add R include paths, you might have to locally adjust this, dont push!
   Add:
-    - -I/usr/local/lib/R/include
-    - -I/usr/lib/R/include
-    - -I/opt/R/include
     - -I/usr/share/R/include
-    - -I/Applications/R.framework/Headers  # macOS
-    - -I/usr/local/include
-    - -I/usr/include
-    - -I../inst/include
+    - -I/usr/include/eigen3
     - -Ilibcmaes/include
     - -Ilibcmaes/build/include
-    - -DR_BUILD
-    - -DR_PACKAGE
-    - -DHAVE_CONFIG_H
 
 ---
 # The --- separates documents.
