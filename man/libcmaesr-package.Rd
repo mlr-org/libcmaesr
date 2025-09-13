@@ -11,12 +11,17 @@ A lightweight R interface to the 'libcmaes' C++ library for Covariance Matrix Ad
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/berndbischl/libcmaesr}
-  \item Report bugs at \url{https://github.com/berndbischl/libcmaesr/issues}
+  \item \url{https://github.com/mlr-org/libcmaesr}
+  \item Report bugs at \url{https://github.com/mlr-org/libcmaesr/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Marc Becker \email{marcbecker@posteo.de} (\href{https://orcid.org/0000-0002-8115-0400}{ORCID})
+\strong{Maintainer}: Bernd Bischl \email{bernd_bischl@gmx.net} (\href{https://orcid.org/0000-0001-6002-6980}{ORCID})
+
+Authors:
+\itemize{
+  \item Martin Binder \email{mlr.developer@mb706.com}
+}
 
 }

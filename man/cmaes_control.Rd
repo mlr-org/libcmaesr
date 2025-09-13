@@ -33,7 +33,8 @@ Default is \code{FALSE}.}
 The CMAES variant to use.
 Possible values are: \link{cmaes_algos}.
 Default is "acmaes", as recommended by
-\url{https://github.com/CMA-ES/libcmaes/wiki/Practical-hints}.}
+\url{https://github.com/CMA-ES/libcmaes/wiki/Practical-hints}.
+For multimodal problems, you likely want to use "ipop" or "bipop".}
 
 \item{max_fevals}{(\code{integer(1)})\cr
 The maximum number of function evaluations.
@@ -56,6 +57,7 @@ NA to disable (default).}
 
 \item{x_tolerance}{(\code{numeric(1)})\cr
 Sets parameter (absolute) tolerance as stopping criterion.
+This checks entries of the covariance matrix, only touch when you know what you are doing.
 NA to disable (default).}
 
 \item{lambda}{(\code{integer(1)})\cr

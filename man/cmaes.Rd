@@ -46,8 +46,10 @@ The objective value of the best point.
 Expected distance to the minimum.
 \item 'time': (\code{numeric(1)})\cr
 The time taken to find the solution in seconds.
-\item 'status': (\code{integer(1)})\cr
+\item 'status_code': (\code{integer(1)})\cr
 The status code, indicating success, failure, or the reason for stopping.
+\item 'status_msg': (\code{character(1)})\cr
+A human-readable status message from libcmaes.
 See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 }
 }
@@ -77,7 +79,9 @@ lower and upper bounds.
 \item Geno-Pheno transformation is automatically applied, in the sense that we use the linear scaling
 to handle the bounds.
 \item Setting gradients is currently not supported.
+\item OpenMP is currently not supported. libcmaes uses OpenMP for the population evaluation mainly, but also for some Eigen stuff.
+Calling into the R Api via threading is not allowed, which would happen in the former.
 }
 
-Read more details here: \url{https://github.com/CMA-ES/libcmaes/wiki/Defining-and-using-bounds-on-parameters}.
+In general, more details can be found here: \url{https://github.com/CMA-ES/libcmaes/wiki/}.
 }
