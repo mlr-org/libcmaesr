@@ -264,9 +264,5 @@ cmaes = function(objective, x0, lower, upper, control = cmaes_control(), batch =
     control$seed = as.integer(runif(1, 1, .Machine$integer.max))
   }
 
-  if (batch) {
-    .Call("c_cmaes_wrap_batch", objective, x0, lower, upper, control, PACKAGE = "libcmaesr")
-  } else {
-    .Call("c_cmaes_wrap_single", objective, x0, lower, upper, control, PACKAGE = "libcmaesr")
-  }
+  .Call("c_cmaes_wrap", objective, x0, lower, upper, control, batch, PACKAGE = "libcmaesr")
 }

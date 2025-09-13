@@ -12,22 +12,27 @@ extern "C" {
 // ********** debug prints **********
 
 // Debug printer system - can be switched on/off
-#define DEBUG_ENABLED 0  // Set to 1 to enable debug output
+#define DEBUG_ENABLED 0 // Set to 1 to enable debug output
 
 #if DEBUG_ENABLED
 #define DEBUG_PRINT(fmt, ...) Rprintf(fmt, ##__VA_ARGS__)
 #else
-#define DEBUG_PRINT(fmt, ...) do {} while(0)
+#define DEBUG_PRINT(fmt, ...)                                                                                          \
+  do {                                                                                                                 \
+  } while (0)
 #endif
 
 // ********** general **********
 
 // set class of arbitrary R object
-void RC_set_class(SEXP s_obj, const char* class_name);
+// class_name MUST be a null-terminated string
+void RC_set_class(SEXP s_obj, const char *class_name);
 // set names of arbitrary R object
-void RC_set_names(SEXP s_obj, int n, const char** names);
+// names MUST be an array of null-terminated string
+void RC_set_names(SEXP s_obj, int n, const char **names);
 // find name in R_NamesSymbol of arbitrary R object,
 // return index of name, -1 if not found
+// name MUST be a null-terminated string
 int RC_find_name(SEXP s_obj, const char *name);
 
 // ********** scalars **********
@@ -60,7 +65,6 @@ SEXP RC_dblmat_create_PROTECT(int n_rows, int n_cols);
 // NB: the data in x has to be in COLUMN-MAJOR ORDER
 SEXP RC_dblmat_create_init_PROTECT(int n_rows, int n_cols, const double *x);
 
-
 // ********** list **********
 
 // create list, named with empty strings
@@ -74,7 +78,6 @@ SEXP RC_list_get_el_by_name(SEXP s_list, const char *name);
 SEXP RC_list_set_el_intscalar(SEXP s_list, int idx, int x);
 SEXP RC_list_set_el_dblscalar(SEXP s_list, int idx, double x);
 
-
 // ********** data.frame **********
 
 // get number of rows in data.frame
@@ -84,16 +87,16 @@ SEXP RC_df_get_col_by_name(SEXP s_dt, const char *name);
 // create data.frame with all numeric columns, dont set column names
 SEXP RC_df_create_allnum_nocolnames_PROTECT(int n_rows, int n_cols);
 // create data.frame with all numeric columns, with provided column names
-SEXP RC_df_create_allnum_PROTECT(int n_rows, int n_cols, const char** colnames);
+SEXP RC_df_create_allnum_PROTECT(int n_rows, int n_cols, const char **colnames);
 
 // ********** R6 **********
 
 // get R6 member by name
 // will return R_UnboundValue when the symbol is not found in frame
-SEXP RC_r6_get_member(SEXP s_r6, const char* name);
+SEXP RC_r6_get_member(SEXP s_r6, const char *name);
 // set R6 member by name
 // will throw an error if the symbol is not found in frame
-void RC_r6_set_member(SEXP s_r6, const char* name, SEXP s_value);
+void RC_r6_set_member(SEXP s_r6, const char *name, SEXP s_value);
 
 // ********** R function calls **********
 
@@ -101,12 +104,14 @@ void RC_r6_set_member(SEXP s_r6, const char* name, SEXP s_value);
 // if error, unprotect nr of objects requested by user and throw error with msg
 // NB: dont use this if you need more complex cleanup / memory management on error!
 // except for the extra unprotect-on-error we assume nothing more is needed / auto-cleaned-up
-SEXP RC_tryeval_PROTECT(SEXP s_fun, SEXP s_arg, const char* errmsg, int on_err_unprotect);
-
-// ********** Type checks **********
-
-// check that s_y is a numeric vector of length expected_length, throw error if not (Rf_error)
-void RC_check_numeric_vector(SEXP s_y, int expected_length);
+SEXP RC_tryeval_PROTECT(SEXP s_fun, SEXP s_arg, const char *errmsg, int on_err_unprotect);
+// Try evaluating without raising an error; sets *err to nonzero on error and returns PROTECTed result
+// You likely always want to use this instead of RC_tryeval_PROTECT
+// NB: result needs to be UNPROTECTed in any case, if there is an error or not
+SEXP RC_tryeval_nothrow_PROTECT(SEXP s_fun, SEXP s_arg, int *err);
+// Check for user interrupt; withpout longjmp for safe interrupt/error handling from C/C++
+// Returns 1 if an interrupt is pending
+int RC_interrupt_pending(void);
 
 #ifdef __cplusplus
 }

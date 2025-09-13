@@ -10,9 +10,9 @@ make_logged_sphere_batch = function(dim, algo, lambda, lower = rep(-1, dim), upp
       !is.na(lambda) &&
         algo %nin% c("ipop", "sepipop", "aipop", "sepaipop", "bipop", "sepbipop", "sepabipop", "vdbipopcma", "abipop")
     ) {
-      assert_matrix(x, nrows = lambda, ncols = dim)
+      checkmate::assert_matrix(x, nrows = lambda, ncols = dim)
     } else {
-      assert_matrix(x, ncols = dim)
+      checkmate::assert_matrix(x, ncols = dim)
     }
     ys = apply(x, 1, function(row) sum(row^2))
     dd = as.data.frame(x)
