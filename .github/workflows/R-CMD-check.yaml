@@ -47,7 +47,7 @@ jobs:
         if: startsWith(matrix.os, 'macos')
         run: |
           brew update
-          brew install cmake eigen
+          brew install eigen
 
       - name: Install system dependencies (Windows)
         if: startsWith(matrix.os, 'windows')
