@@ -1,5 +1,7 @@
 # libcmaesr
 
+[![R-CMD-check](https://github.com/mlr-org/libcmaesr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mlr-org/libcmaesr/actions/workflows/R-CMD-check.yaml)
+
 A lightweight R interface to the [libcmaes](https://github.com/CMA-ES/libcmaes) C++ library for Covariance Matrix Adaptation Evolution Strategy (CMA-ES). It allows for the optimization of black-box functions using the CMA-ES algorithm and its variants.
 
 ## Installation
