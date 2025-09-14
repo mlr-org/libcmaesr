@@ -24,10 +24,10 @@ jobs:
       # Avoid reading user or repo profiles (e.g., a repository .Rprofile)
       # that may load dev-only packages like 'languageserver' and break CI.
       # Point to empty profiles to ensure a clean CI environment.
-      R_PROFILE_USER: /dev/null
-      R_ENVIRON_USER: /dev/null
-      R_PROFILE: /dev/null
-      R_ENVIRON: /dev/null
+      #R_PROFILE_USER: /dev/null
+      #R_ENVIRON_USER: /dev/null
+      #R_PROFILE: /dev/null
+      #R_ENVIRON: /dev/null
 
     steps:
       - uses: actions/checkout@v5
