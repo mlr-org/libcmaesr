@@ -1,5 +1,6 @@
 # Use C++11 because libcmaes expects it
-CXX_STD = CXX11
+# dropped as R CMD check complains
+#CXX_STD = CXX11
 
 # libcmaes.a static library, built after its cmake build
 LIBCMAES = libcmaes/build/src/libcmaes.a
