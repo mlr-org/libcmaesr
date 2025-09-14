@@ -23,7 +23,10 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
+      - name Checkout Repo with libcmaes submodule
       - uses: actions/checkout@v5
+        with:
+          submodules: recursive
 
       - name: Remove repository .Rprofile
         run: rm -f .Rprofile
@@ -67,6 +70,7 @@ jobs:
         uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
-          build_args: '"--no-manual"'
-
+          # dont build pdf manual so we dont need tex and are faster
+          args: 'c("--no-manual", "--as-cran")'
+          error-on: '"note"
 
