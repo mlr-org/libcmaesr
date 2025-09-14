@@ -19,6 +19,7 @@ using MyCMAParameters = CMAParameters<MyGenoPheno>;
 // cache for batch evaluation mapping phenotype column pointers to fvalues
 static std::unordered_map<const double *, double> G_EVAL_CACHE;
 static SEXP G_OBJ;
+static bool G_IN_BATCH = false;
 
 /*
 FIXME:
@@ -39,8 +40,6 @@ optimization) can exceed res$fevals.
 
 - remove all fixmes
 
-- in clang-format exlude the libcmaes src dirs
-
 - test on rhub and winbuilder
 
 - if i runt the unit tests, results dont seem to be completely deterministic
@@ -48,10 +47,12 @@ although i seed them? that is a problem..... i could see this here ⠦ | 747 |
 single [1] "dim=3, lambda=NA, algo=vdbipopcma" [1] -0.001244280  0.010468126
 0.005541255 [1] 0.0001418354 ✖ | 1      871 | single [15.4s]
 
-- use stdint
-also this also in RC helpers
 
 - open issue to overwrite logger better / no exit
+  there seems be only this call to stderr
+  in cmaparameters.cc, which i commented out
+   // std::cerr << "[Warning]: set_vd on non VD algorithm " << this->_algo << ". Not activating VD update\n";
+
 
 - we currently have a fork of libcmaes with 2 branches:
   - r-changes: overwites cout logging to Rprintf
@@ -71,6 +72,7 @@ also this also in RC helpers
 - support unbounded problems
 - allow setting gradients
 
+- but the open issues into a better file
 
 ── R CMD check results
 ──────────────────────────────────────────────────────────────────────────────────────────────────
@@ -112,7 +114,7 @@ libcmaesr 0.1 ──── Duration: 3m 25.2s
 
 */
 
-enum class libcmaesr_errcode : uint32_t { ok = 0, bad_return = 1, eval_failed = 2, user_interrupt = 3 };
+enum class libcmaesr_errcode : uint32_t { ok = 0, bad_return = 1, eval_failed = 2, user_interrupt = 3, unknown = 4 };
 
 // Exception carrying code + context
 struct libcmaesr_error : std::runtime_error {
@@ -152,6 +154,9 @@ static double cached_fitfunc_impl(const double *x, R_xlen_t dim) {
     return it->second;
   } else {
     DEBUG_PRINT("cached_fitfunc_impl: not found\n");
+    if (G_IN_BATCH) {
+      throw libcmaesr_error(libcmaesr_errcode::unknown, "libcmaesr: cache miss in batch mode (pointer mismatch)");
+    }
     // create matrix with 1 row and eval in R
     SEXP s_x = RC_dblmat_create_init_PROTECT(1, dim, x);
     SEXP s_y = call_obj_with_error_handling_PROTECT(G_OBJ, s_x, 1);
@@ -173,6 +178,12 @@ template <typename Strategy> static CMASolutions run_with_batch_eval(Strategy &s
     // create lambda x dim matrix for R objective, fill with phenotype
     SEXP s_x = RC_dblmat_create_PROTECT((R_xlen_t)lambda, (R_xlen_t)dim);
 
+    // copy to R, but transposed
+    // each row of phenocands (with lambda entries), becomes a column of s_x
+    for (Eigen::Index i = 0; i < dim; ++i) {
+      std::memcpy(REAL(s_x) + i * lambda, phenocands.row(i).data(), sizeof(double) * lambda);
+    }
+
     // Column-major map over R memory, unaligned for safety
     Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>, Eigen::Unaligned> X(
       REAL(s_x), lambda, dim);
@@ -184,14 +195,19 @@ template <typename Strategy> static CMASolutions run_with_batch_eval(Strategy &s
 
     // populate cache: map phenotype column pointer -> fvalue
     G_EVAL_CACHE.clear();
-    // FIXME: should we do this here? just do this once globally?
-    G_EVAL_CACHE.reserve((size_t)lambda);
     for (Eigen::Index r = 0; r < lambda; ++r) {
       G_EVAL_CACHE.emplace(phenocands.col(r).data(), REAL(s_y)[r]);
     }
     // delegate to internal eval to mirror all behaviors (UH, elitism, fevals,
     // etc.)
-    strat.eval(cands, phenocands);
+    G_IN_BATCH = true;
+    try {
+      strat.eval(cands, phenocands);
+    } catch (...) {
+      G_IN_BATCH = false;
+      throw;
+    }
+    G_IN_BATCH = false;
     UNPROTECT(2); // s_x, s_y
   };
 
