@@ -64,6 +64,8 @@ jobs:
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          # pak repo status occasionally fails in CI; fall back to install.packages
+          use-pak: false
           extra-packages: |
             any::rcmdcheck
             any::remotes
