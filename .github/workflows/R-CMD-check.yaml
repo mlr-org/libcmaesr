@@ -23,7 +23,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - name Checkout Repo with libcmaes submodule
+      - name: Checkout Repo with libcmaes submodule
         uses: actions/checkout@v5
         with:
           submodules: recursive
