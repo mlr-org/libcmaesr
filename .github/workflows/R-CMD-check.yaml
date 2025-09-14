@@ -21,6 +21,13 @@ jobs:
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # Avoid reading user or repo profiles (e.g., a repository .Rprofile)
+      # that may load dev-only packages like 'languageserver' and break CI.
+      # Point to empty profiles to ensure a clean CI environment.
+      R_PROFILE_USER: /dev/null
+      R_ENVIRON_USER: /dev/null
+      R_PROFILE: /dev/null
+      R_ENVIRON: /dev/null
 
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +36,8 @@ jobs:
         uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.r }}
+          # Use Posit Public RSPM for faster/more reliable binary installs on Linux
+          use-public-rspm: true
 
       - name: Install system dependencies (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
