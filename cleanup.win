@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# run by R on Windows before building to clean previous artifacts
+rm -f src/Makevars.eigen
+rm -rf libcmaes/build
