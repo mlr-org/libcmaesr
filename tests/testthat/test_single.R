@@ -253,3 +253,23 @@ test_that("single: objective must return length 1 (length check)", {
     regexp = "length 1.*got 2"
   )
 })
+
+test_that("single: logging / capture.output works", {
+  obj = make_logged_sphere_single(dim = 1, lambda = NA)
+  ctrl = cmaes_control(max_fevals = 5, lambda = NA, seed = 123)
+
+  ctrl$quiet = TRUE
+  expect_silent({
+    res = cmaes(obj$fn, obj$x0, obj$lower, obj$upper, ctrl, batch = FALSE)
+  })
+  ctrl$quiet = FALSE
+  expect_output({
+    res = cmaes(obj$fn, obj$x0, obj$lower, obj$upper, ctrl, batch = FALSE)
+  })
+  expect_silent({
+    outp = capture.output({
+      res = cmaes(obj$fn, obj$x0, obj$lower, obj$upper, ctrl, batch = FALSE)
+    })
+  })
+  expect_true(any(grepl("CMA-ES", outp)))
+})

@@ -28,7 +28,7 @@ $(LIBCMAES):
 	(cd libcmaes; \
 	  CC="$(CC)" CXX="$(CXX11)" \
 	  cmake -S . -B build \
-	    -DCMAKE_CXX_FLAGS="$(CXX11FLAGS) -Wno-unknown-pragmas" \
+	    -DCMAKE_CXX_FLAGS="$(CXX11FLAGS) -Wno-unknown-pragmas -DLIBCMAES_LOG_TO_R=1" \
 	    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 	    -DLIBCMAES_BUILD_SHARED_LIBS=OFF \
 	    -DLIBCMAES_BUILD_PYTHON=OFF \
