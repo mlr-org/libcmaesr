@@ -69,8 +69,8 @@ jobs:
       - name: R CMD Check
         uses: r-lib/actions/check-r-package@v2
         with:
-          upload-snapshots: true
           # dont build pdf manual so we dont need tex and are faster
           args: 'c("--no-manual", "--as-cran")'
-          error-on: '"note"
+          error-on: '"note"'
+
 
