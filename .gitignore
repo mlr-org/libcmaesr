@@ -16,6 +16,7 @@ libcmaesr*.tar.gz
 # temp stuff in tests
 /cpp-tests/test_ipop_max_fevals
 /cpp-tests/test_bipop_max_fevals
+/cpp-tests/test_fevals_mismatch
 /benchmarks/registry/
 /benchmarks/speed_ml.png
 /benchmarks/speed_testfuns.png
