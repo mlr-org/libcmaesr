@@ -1,10 +1,13 @@
-#include "rc_helpers.h"
 #include <Eigen/Dense>
 #include <libcmaes/cmaes.h>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
+
+#define R_NO_REMAP
+#include "Rinternals.h"
+#include "rc_helpers.h"
 
 using namespace libcmaes;
 using Eigen::MatrixXd;
@@ -19,6 +22,10 @@ static SEXP G_OBJ;
 
 /*
 FIXME:
+
+- WRE seems to say i need to cleanup all generated files from configure
+
+- run analyzers with task.json
 
 - the returned "fevals" by libcmaes seem to wrong, especially for sepipop and sepabipop
 Where the return value goes wrong (restarts)
@@ -105,7 +112,7 @@ libcmaesr 0.1 ──── Duration: 3m 25.2s
 
 */
 
-enum class libcmaesr_errcode : int { ok = 0, bad_return = 1, eval_failed = 2, user_interrupt = 3 };
+enum class libcmaesr_errcode : uint32_t { ok = 0, bad_return = 1, eval_failed = 2, user_interrupt = 3 };
 
 // Exception carrying code + context
 struct libcmaesr_error : std::runtime_error {
@@ -114,19 +121,19 @@ struct libcmaesr_error : std::runtime_error {
 };
 
 // Local checker used to throw a typed C++ exception without touching helpers
-static inline void check_numvec(SEXP s_y, int expected_length) {
+static inline void check_numvec(SEXP s_y, R_xlen_t expected_length) {
   if (!Rf_isNumeric(s_y)) {
     throw libcmaesr_error(libcmaesr_errcode::bad_return, "libcmaesr: objective must return a numeric vector");
   }
-  if (Rf_length(s_y) != expected_length) {
+  if (XLENGTH(s_y) != expected_length) {
     throw libcmaesr_error(
       libcmaesr_errcode::bad_return, std::string("libcmaesr: objective must return a numeric vector of length ") +
-                                       std::to_string(expected_length) + ", got " + std::to_string(Rf_length(s_y)));
+                                       std::to_string(expected_length) + ", got " + std::to_string(XLENGTH(s_y)));
   }
 }
 
-SEXP call_obj_with_error_handling_PROTECT(SEXP s_obj, SEXP s_x, int lambda) {
-  int err = 0;
+SEXP call_obj_with_error_handling_PROTECT(SEXP s_obj, SEXP s_x, R_xlen_t lambda) {
+  r_int32_t err = 0;
   SEXP s_y = RC_tryeval_nothrow_PROTECT(G_OBJ, s_x, &err);
   if (err != 0) {
     throw libcmaesr_error(libcmaesr_errcode::eval_failed, "libcmaesr: objective evaluation failed!");
@@ -137,8 +144,8 @@ SEXP call_obj_with_error_handling_PROTECT(SEXP s_obj, SEXP s_x, int lambda) {
 
 // FitFunc that looks up precomputed fvalues from the cache; falls back to
 // single-point R eval
-static double cached_fitfunc_impl(const double *x, int dim) {
-  DEBUG_PRINT("cached_fitfunc_impl: dim=%d\n", dim);
+static double cached_fitfunc_impl(const double *x, R_xlen_t dim) {
+  DEBUG_PRINT("cached_fitfunc_impl: dim=%td\n", (ptrdiff_t)dim);
   // FIXME can we make this faster?
   auto it = G_EVAL_CACHE.find(x);
   if (it != G_EVAL_CACHE.end()) {
@@ -157,14 +164,14 @@ static double cached_fitfunc_impl(const double *x, int dim) {
 // run strategy with a custom EvalFunc that batch-evaluates the population in R
 template <typename Strategy> static CMASolutions run_with_batch_eval(Strategy &strat, SEXP s_obj) {
   EvalFunc evalf = [&](const dMat &cands, const dMat &phenocands) {
-    const int dim = phenocands.rows();
-    const int lambda = phenocands.cols();
+    const Eigen::Index dim = phenocands.rows();
+    const Eigen::Index lambda = phenocands.cols();
 
     // allow user interrupt before allocating/protecting
     if (RC_interrupt_pending()) throw libcmaesr_error(libcmaesr_errcode::user_interrupt, "libcmaesr: user interrupt");
 
     // create lambda x dim matrix for R objective, fill with phenotype
-    SEXP s_x = RC_dblmat_create_PROTECT(lambda, dim);
+    SEXP s_x = RC_dblmat_create_PROTECT((R_xlen_t)lambda, (R_xlen_t)dim);
 
     // Column-major map over R memory, unaligned for safety
     Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>, Eigen::Unaligned> X(
@@ -173,13 +180,13 @@ template <typename Strategy> static CMASolutions run_with_batch_eval(Strategy &s
     X = phenocands.transpose();
 
     // call R once on the whole batch
-    SEXP s_y = call_obj_with_error_handling_PROTECT(s_obj, s_x, lambda);
+    SEXP s_y = call_obj_with_error_handling_PROTECT(s_obj, s_x, (R_xlen_t)lambda);
 
     // populate cache: map phenotype column pointer -> fvalue
     G_EVAL_CACHE.clear();
     // FIXME: should we do this here? just do this once globally?
-    G_EVAL_CACHE.reserve(lambda);
-    for (int r = 0; r < lambda; ++r) {
+    G_EVAL_CACHE.reserve((size_t)lambda);
+    for (Eigen::Index r = 0; r < lambda; ++r) {
       G_EVAL_CACHE.emplace(phenocands.col(r).data(), REAL(s_y)[r]);
     }
     // delegate to internal eval to mirror all behaviors (UH, elitism, fevals,
@@ -281,12 +288,12 @@ static CMASolutions dispatch_with_batch_eval(MyCMAParameters &cmaparams, SEXP s_
 }
 
 std::pair<MyCMAParameters, MyGenoPheno> cmaes_setup(SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl) {
-  int dim = Rf_length(s_x0);
-  int lambda = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "lambda"));
+  R_xlen_t dim = XLENGTH(s_x0);
+  r_int32_t lambda = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "lambda"));
   if (lambda == NA_INTEGER) lambda = -1;
   double sigma = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "sigma"));
   if (R_IsNA(sigma)) sigma = -1;
-  int seed = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "seed"));
+  r_int32_t seed = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "seed"));
   seed = (seed == NA_INTEGER) ? 0 : seed;
 
   DEBUG_PRINT("cmaes_setup: dim: %d; lambda: %d; sigma: %f; seed: %d\n", dim, lambda, sigma, seed);
@@ -300,7 +307,7 @@ std::pair<MyCMAParameters, MyGenoPheno> cmaes_setup(SEXP s_x0, SEXP s_lower, SEX
   cmaparams.set_str_algo(RC_charscalar_as_string(RC_list_get_el_by_name(s_ctrl, "algo")));
   int max_fevals = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_fevals"));
   if (max_fevals != NA_INTEGER) cmaparams.set_max_fevals(max_fevals);
-  int max_iter = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_iter"));
+  r_int32_t max_iter = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_iter"));
   if (max_iter != NA_INTEGER) cmaparams.set_max_iter(max_iter);
   double ftarget = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "ftarget"));
   if (!R_IsNA(ftarget)) cmaparams.set_ftarget(ftarget);
@@ -308,11 +315,11 @@ std::pair<MyCMAParameters, MyGenoPheno> cmaes_setup(SEXP s_x0, SEXP s_lower, SEX
   if (!R_IsNA(f_tolerance)) cmaparams.set_ftolerance(f_tolerance);
   double x_tolerance = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "x_tolerance"));
   if (!R_IsNA(x_tolerance)) cmaparams.set_xtolerance(x_tolerance);
-  int max_restarts = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_restarts"));
+  r_int32_t max_restarts = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "max_restarts"));
   if (max_restarts != NA_INTEGER) cmaparams.set_restarts(max_restarts);
-  int elitism = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "elitism"));
+  r_int32_t elitism = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "elitism"));
   if (elitism != NA_INTEGER) cmaparams.set_elitism(elitism);
-  int tpa = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "tpa"));
+  r_int32_t tpa = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "tpa"));
   if (tpa != NA_INTEGER) cmaparams.set_tpa(tpa);
   double dsigma = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "tpa_dsigma"));
   if (!R_IsNA(dsigma)) cmaparams.set_tpa_dsigma(dsigma);
