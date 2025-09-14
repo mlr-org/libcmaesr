@@ -11,6 +11,36 @@ You can install the development version from GitHub with:
 devtools::install_github("mlr-org/libcmaesr")
 ```
 
+## System requirements
+
+This package compiles native code and requires:
+
+- C++11 compiler toolchain
+- CMake (>= 3.15)
+- Eigen3 (header-only)
+
+Install hints:
+
+- Ubuntu:
+```bash
+sudo apt-get update && sudo apt-get install -y cmake libeigen3-dev
+```
+
+- macOS (Homebrew):
+```bash
+brew install cmake eigen
+```
+
+- Windows:
+  - Install Rtools (UCRT) matching your R version.
+  - Optionally install Eigen and CMake in MSYS2 for local builds:
+```bash
+pacman -Sy --noconfirm
+pacman -S --noconfirm mingw-w64-ucrt-x86_64-eigen3 mingw-w64-ucrt-x86_64-cmake
+```
+
+For the authoritative and up-to-date list of CI system dependencies, see the workflow: [`.github/workflows/R-CMD-check.yaml`](.github/workflows/R-CMD-check.yaml).
+
 ## Example
 
 This is a basic example which shows you how to solve a common test problem, the sphere function:
