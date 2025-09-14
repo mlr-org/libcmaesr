@@ -1,5 +1,4 @@
-
-# use c++11; matches libcmaes
+# Use C++11 because libcmaes expects it
 CXX_STD = CXX11
 
 # libcmaes.a static library, built after its cmake build
@@ -26,23 +25,21 @@ $(SHLIB): $(LIBCMAES)
 #  python bindings, examples, tests, surrogates, openmp
 $(LIBCMAES):
 	(cd libcmaes; \
-	  set -- $$CXX; CXX="$$1" cmake -S . -B build \
-	    -DCMAKE_CXX_STANDARD=11 \
+	  CC="$(CC)" CXX="$(CXX11)" \
+	  cmake -S . -B build \
+	    -DCMAKE_CXX_FLAGS="$(CXX11FLAGS) -Wno-unknown-pragmas" \
 	    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 	    -DLIBCMAES_BUILD_SHARED_LIBS=OFF \
 	    -DLIBCMAES_BUILD_PYTHON=OFF \
 	    -DLIBCMAES_BUILD_EXAMPLES=OFF \
 	    -DLIBCMAES_ENABLE_SURROG=OFF \
 	    -DLIBCMAES_USE_OPENMP=OFF \
-	    -DCMAKE_BUILD_TYPE=Release \
-	    -DCMAKE_CXX_FLAGS=-Wno-unknown-pragmas; \
+	    -DCMAKE_BUILD_TYPE=Release ;\
 	  $(MAKE) -C build)
+
 
 # make our src files also depend on libcmaes.a
 # (inferred by R from all compilable sources in src/; e.g., .c, .cc, .cpp, .f)
 # otherwise we get:
 # libcmaes/include/libcmaes/pwq_bound_strategy.h:26:10: fatal error: libcmaes/cmaes_export.h: No such file or directory
 $(OBJECTS): $(LIBCMAES)
-
-
-
