@@ -3,7 +3,7 @@ library(ggplot2)
 library(data.table)
 source("benchmarks/setup.R")
 
-reg = loadRegistry(file.dir = REG_PATH, writeable = FALSE)
+reg = loadRegistry(file.dir = expsetup_reg_path, writeable = FALSE)
 
 res = reduceResultsDataTable(reg = reg)
 res = ijoin(getJobPars(reg = reg), res)
