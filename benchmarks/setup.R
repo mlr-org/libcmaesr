@@ -3,10 +3,14 @@ expsetup_reg_path = "benchmarks/registry"
 expsetup_flog_size = 10000
 
 expsetup_dims = 5
-expsetup_fids = 1:24
-expsetup_iids = 1:3
-expsetup_reps = 4L
-expsetup_max_fevals = 5000
+expsetup_fids = 1:2
+# expsetup_fids = 1:24
+expsetup_iids = 1
+#expsetup_iids = 1:3
+expsetup_reps = 1L
+# expsetup_reps = 4L
+expsetup_max_fevals = 500
+# expsetup_max_fevals = 5000
 expsetup_max_iters = 500
 
 

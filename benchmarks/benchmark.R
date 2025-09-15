@@ -2,8 +2,8 @@ library(smoof)
 library(batchtools)
 source("benchmarks/setup.R")
 
-unlink(REG_PATH, recursive = TRUE)
-reg = makeExperimentRegistry(file.dir = REG_PATH, packages = "smoof")
+unlink(expsetup_reg_path, recursive = TRUE)
+reg = makeExperimentRegistry(file.dir = expsetup_reg_path, packages = "smoof")
 
 addProblem(reg, name = "bbob", fun = function(job, data, dim, fid, iid) {
   bfun = smoof::makeBBOBFunction(dim = dim, fid = fid, iid = iid)
@@ -14,18 +14,18 @@ addProblem(reg, name = "bbob", fun = function(job, data, dim, fid, iid) {
 
 addAlgorithm(reg, name = "cma_es", fun = function(job, data, instance) {
   library(cmaes)
-  loggedfun = addLoggingWrapper(instance$bfun, size = FLOG_SIZE)
+  loggedfun = addLoggingWrapper(instance$bfun, size = expsetup_flog_size)
   x0 = runif(instance$dim, min = instance$lower, max = instance$upper)
-  ctrl = list(maxit = MAX_ITERS)
+  ctrl = list(maxit = expsetup_max_iters)
   res = cmaes::cma_es(par = x0, fn = loggedfun, lower = instance$lower, upper = instance$upper, control = ctrl)
-  GET_RESULT(loggedfun, instance$ybest)
+  get_result(loggedfun, instance$ybest)
 })
 
 addAlgorithm(reg, name = "libcmaesr", fun = function(job, data, instance) {
   library(libcmaesr)
-  loggedfun = addLoggingWrapper(instance$bfun, size = FLOG_SIZE)
+  loggedfun = addLoggingWrapper(instance$bfun, size = expsetup_flog_size)
   x0 = runif(instance$dim, min = instance$lower, max = instance$upper)
-  ctrl = cmaes_control(max_fevals = MAX_FEVALS, algo = "bipop")
+  ctrl = cmaes_control(max_fevals = expsetup_max_fevals, algo = "bipop")
   res = libcmaesr::cmaes(
     x0 = x0,
     objective = loggedfun,
@@ -34,13 +34,13 @@ addAlgorithm(reg, name = "libcmaesr", fun = function(job, data, instance) {
     control = ctrl,
     batch = FALSE
   )
-  GET_RESULT(loggedfun, instance$ybest)
+  get_result(loggedfun, instance$ybest)
 })
 
 
-pdes = list(bbob = expand.grid(dim = DIMS, fid = FIDS, iid = IIDS))
+pdes = list(bbob = expand.grid(dim = expsetup_dims, fid = expsetup_fids, iid = expsetup_iids))
 ades = list(cma_es = data.frame(), libcmaesr = data.frame())
-addExperiments(reg = reg, prob.designs = pdes, algo.designs = ades, repls = REPLS)
+addExperiments(reg = reg, prob.designs = pdes, algo.designs = ades, repls = expsetup_reps)
 
 
 submitJobs(reg = reg)
