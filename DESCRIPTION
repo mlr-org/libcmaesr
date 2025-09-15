@@ -4,7 +4,8 @@ Version: 0.1
 Authors@R: c(
     person("Bernd", "Bischl", , "bernd_bischl@gmx.net", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0001-6002-6980")),
-    person("Martin", "Binder", , "mlr.developer@mb706.com", role = "aut")
+    person("Martin", "Binder", , "mlr.developer@mb706.com", role = "aut"),
+    person("Lars", "Kotthoff", , "lk223@st-andrews.ac.uk", role = "aut")
   )
 Copyright: See the file COPYRIGHTS for libcmaes copyright details
 Description: A lightweight R interface to the 'libcmaes' C++ library for Covariance Matrix Adaptation
