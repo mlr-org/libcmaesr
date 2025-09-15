@@ -2,7 +2,6 @@
 set -e
 
 EIGEN_CPPFLAGS=""
-=======
 
 # check with "type" if command pkg-config is available
 if type pkg-config; then
