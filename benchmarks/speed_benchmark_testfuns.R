@@ -1,6 +1,8 @@
-REPLS = 5L
-DIMS = c(2L, 5L, 10L, 20L)
-BUDGETS = c(100L, 200L, 500L)
+source("benchmarks/speed_helpers.R")
+
+repls = 5L
+dims = c(2L, 5L, 10L, 20L)
+budgets = c(100L, 200L, 500L)
 
 results = list()
 for (dim in DIMS) {
@@ -8,7 +10,7 @@ for (dim in DIMS) {
     print(paste("Running", dim, "D,", budget, "B"))
     obj_single = addCountingWrapper(makeRastriginFunction(dim))
     obj_batch = function(x) rowSums(x^2)
-    dd = run_speedtest(obj_single, obj_batch, dim, budget, reps = REPLS)
+    dd = run_speedtest(obj_single, obj_batch, dim, budget, reps = repls, do_check = TRUE)
     results[[length(results) + 1]] = dd
   }
 }
@@ -28,7 +30,13 @@ long = melt(
 na_counts = long[, .(na_count = sum(is.na(time)), total = .N), by = .(dim, algorithm)]
 print(na_counts)
 
+# First compute mean times
 avg = long[, .(time_mean = mean(time, na.rm = TRUE)), by = .(dim, budget, algorithm)]
+# Get baseline times for libcmaesr_batch
+baseline = avg[algorithm == "libcmaesr_batch", .(dim, budget, baseline = time_mean)]
+# Join and compute slowness factor relative to baseline
+avg = avg[baseline, on = .(dim, budget)]
+avg[, slowness_factor := time_mean / baseline]
 
 p = ggplot(avg, aes(x = budget, y = time_mean, color = algorithm)) +
   geom_line() +
