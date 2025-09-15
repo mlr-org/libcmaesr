@@ -5,15 +5,13 @@
 # libcmaes.a static library, built after its cmake build
 LIBCMAES = libcmaes/build/src/libcmaes.a
 # linker flags for our SHLIB
-PKG_LIBS += $(LIBCMAES)
+PKG_LIBS = $(LIBCMAES)
+
+# include Eigen flags, e.g. EIGEN_CPPFLAGS += -I/usr/include/eigen3
+-include Makevars.eigen
 
 # include libcmaes headers
-PKG_CPPFLAGS += -Ilibcmaes/include -Ilibcmaes/build/include
-# suppress warnings
-PKG_CXXFLAGS += -Wno-unknown-pragmas
-
-# include Eigen flags, e.g. PKG_CPPFLAGS += -I/usr/include/eigen3
--include Makevars.eigen
+PKG_CPPFLAGS = $(EIGEN_CPPFLAGS) -Ilibcmaes/include -Ilibcmaes/build/include
 
 # build shlib, but depend on static libcmaes.a
 # targets created as recommended by WRE
@@ -28,7 +26,7 @@ $(LIBCMAES):
 	(cd libcmaes; \
 	  CC="$(CC)" CXX="$(CXX11)" \
 	  cmake -S . -B build \
-	    -DCMAKE_CXX_FLAGS="$(CXX11FLAGS) -Wno-unknown-pragmas -DLIBCMAES_LOG_TO_R=1" \
+	    -DCMAKE_CXX_FLAGS="$(CXX11FLAGS) -DLIBCMAES_LOG_TO_R=1" \
 	    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 	    -DLIBCMAES_BUILD_SHARED_LIBS=OFF \
 	    -DLIBCMAES_BUILD_PYTHON=OFF \
