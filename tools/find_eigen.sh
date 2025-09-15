@@ -3,21 +3,17 @@ set -e
 
 mkdir -p src
 
-have() { command -v "$1" >/dev/null 2>&1; }
-
 EIGEN_CFLAGS=""
 
-if have pkg-config; then
-  EIGEN_CFLAGS="$(pkg-config --cflags eigen3 2>/dev/null || true)"
+if type pkg-config; then
+  EIGEN_CFLAGS="$(pkg-config --cflags eigen3 2>/dev/null)"
+  if [ $? -ne 0 ] && type cmake; then
+    EIGEN_CFLAGS="$(cmake --find-package -DCOMPILER_ID=GNU -DNAME=Eigen3 -DLANGUAGE=CXX -DMODE=COMPILE 2>/dev/null)"
+    if [ $? -ne 0 ]; then
+      EIGEN_CFLAGS=
+    fi
+  fi
 fi
-
-if [ -z "$EIGEN_CFLAGS" ] && have cmake; then
-  # compiler ID doesn't matter for include discovery; leave generic
-  EIGEN_CFLAGS="$(cmake --find-package -DNAME=Eigen3 -DLANGUAGE=CXX -DMODE=COMPILE 2>/dev/null || true)"
-fi
-
-# normalize whitespace
-EIGEN_CFLAGS=$(printf '%s\n' "$EIGEN_CFLAGS" | tr '\n' ' ' | sed 's/[[:space:]]\+/ /g; s/^ //; s/ $//')
 
 if [ -z "$EIGEN_CFLAGS" ]; then
   cat >&2 <<EOF
