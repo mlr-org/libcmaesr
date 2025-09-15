@@ -1,5 +1,3 @@
-/*
-FIXME:
 
 - rename cleanup.later to cleanup
   but that seems to fuckup clangd :(
@@ -75,26 +73,10 @@ libcmaesr 0.1 ──── Duration: 3m 25.2s
   $(wildcard), ifeq ... endif, .NOTPARALLEL See section ‘Writing portable
   packages’ in the ‘Writing R Extensions’ manual.
 
-❯ checking compilation flags used ... WARNING
-  Compilation used the following non-portable flag(s):
-    ‘-Wno-unknown-pragmas’ ‘-mno-omit-leaf-frame-pointer’
-  including flag(s) suppressing warnings
-
 
 ❯ checking compiled code ... NOTE
-  File ‘libcmaesr/libs/libcmaesr.so’:
-    Found ‘_ZSt4cerr’, possibly from ‘std::cerr’ (C++)
-      Object: ‘libcmaes/build/src/libcmaes.a’
     Found ‘rand’, possibly from ‘rand’ (C)
       Object: ‘libcmaes/build/src/libcmaes.a’
 
-  Compiled code should not call entry points which might terminate R nor
-  write to stdout/stderr instead of to the console, nor use Fortran I/O
-  nor system RNGs nor [v]sprintf.
-
-  See ‘Writing portable packages’ in the ‘Writing R Extensions’ manual.
 
 
-
-
-*/
