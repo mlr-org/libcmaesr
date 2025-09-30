@@ -273,3 +273,13 @@ test_that("single: logging / capture.output works", {
   })
   expect_true(any(grepl("CMA-ES", outp)))
 })
+
+test_that("single: x0 must be strictly between lower and upper", {
+  dim = 2
+  fn = function(x) sum(x^2)
+  x0 = c(0.5, 0.6, 0.7)
+  lower = c(0.4, 0.5, 0.6)
+  upper = c(0.6, 0.6, 0.65)
+  ctrl = cmaes_control(max_fevals = 5)
+  expect_error(cmaes(fn, x0, lower, upper, ctrl, batch = FALSE), regexp = "must be strictly between")
+})
