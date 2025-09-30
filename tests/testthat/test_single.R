@@ -283,3 +283,25 @@ test_that("single: x0 must be strictly between lower and upper", {
   ctrl = cmaes_control(max_fevals = 5)
   expect_error(cmaes(fn, x0, lower, upper, ctrl, batch = FALSE), regexp = "must be strictly between")
 })
+
+test_that("x0 on lower bound works", {
+  dim = 2
+  fn = function(x) sum(x^2)
+  x0 = c(0.5, 0.6)
+  lower = c(0.5, 0.5)
+  upper = c(0.6, 0.6)
+  ctrl = cmaes_control(max_fevals = 5)
+  res = cmaes(fn, x0, lower, upper, ctrl, batch = FALSE)
+  expect_number(res$y)
+})
+
+test_that("x0 on upper bound works", {
+  dim = 2
+  fn = function(x) sum(x^2)
+  x0 = c(0.6, 0.6)
+  lower = c(0.5, 0.5)
+  upper = c(0.6, 0.6)
+  ctrl = cmaes_control(max_fevals = 5)
+  res = cmaes(fn, x0, lower, upper, ctrl, batch = FALSE)
+  expect_number(res$y)
+})
