@@ -20,38 +20,14 @@ void RC_set_names(SEXP s_obj, R_xlen_t n, const char **names) {
   UNPROTECT(1); // s_names
 }
 
-// FIXME: bug: we only do a prefix check here.....
-/*
-#include <Rinternals.h>
-#include <string.h>
-
-R_len_t RC_find_name(SEXP x, const char *name) {
-  SEXP nm = Rf_getAttrib(x, R_NamesSymbol);
-  if (nm == R_NilValue || !Rf_isString(nm)) return -1;
-
-  const size_t nlen = strlen(name);
-  const R_len_t n = Rf_length(nm);  // use XLENGTH/R_xlen_t if you need long vectors
-
-  for (R_len_t i = 0; i < n; ++i) {
-    SEXP s = STRING_ELT(nm, i);
-    if (s == NA_STRING) continue;
-
-    // normalize to UTF-8 to avoid locale/encoding mismatches
-    const char *p = Rf_translateCharUTF8(s);
-
-    // exact match without recomputing strlen(p)
-    if (p[nlen] == '\0' && memcmp(p, name, nlen) == 0)
-      return i;
-  }
-  return -1;
-}
-
-*/
-
 R_xlen_t RC_find_name(SEXP s_obj, const char *name) {
   SEXP s_names = Rf_getAttrib(s_obj, R_NamesSymbol);
-  for (R_xlen_t i = 0; i < Rf_length(s_names); i++) {
-    if (strncmp(CHAR(STRING_ELT(s_names, i)), name, strlen(name)) == 0) {
+  if (!Rf_isString(s_names)) return -1;
+  for (R_xlen_t i = 0; i < Rf_xlength(s_names); i++) {
+    SEXP s_name = STRING_ELT(s_names, i);
+    if (s_name == NA_STRING) continue;
+    // normalize to UTF-8 to avoid locale/encoding mismatches
+    if (strcmp(Rf_translateCharUTF8(s_name), name) == 0) {
       return i;
     }
   }
