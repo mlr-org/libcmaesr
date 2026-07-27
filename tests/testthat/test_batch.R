@@ -97,6 +97,25 @@ test_that("cmaes works with exception in objective", {
 })
 
 
+test_that("batch run after an errored batch run works", {
+  dim = 2
+  x0 = rep(0.5, dim)
+  lower = rep(-1, dim)
+  upper = rep(1, dim)
+  ctrl = cmaes_control(lambda = 4, max_fevals = 20, seed = 1, elitism = 1L)
+
+  fn_err = function(x) stop("boom")
+  capture.output(type = "message", {
+    expect_error(cmaes(fn_err, x0, lower, upper, ctrl, batch = TRUE), regexp = "evaluation failed")
+  })
+
+  fn = function(x) apply(x, 1, function(row) sum(row^2))
+  res = cmaes(fn, x0, lower, upper, ctrl, batch = TRUE)
+  expect_number(res$y)
+  expect_numeric(res$x, any.missing = FALSE, len = dim)
+})
+
+
 test_that("maximize works", {
   dim = 2
   obj = make_logged_sphere_batch(dim, "cmaes", lambda = NA)

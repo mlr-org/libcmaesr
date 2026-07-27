@@ -261,6 +261,10 @@ std::pair<MyCMAParameters, MyGenoPheno> cmaes_setup(SEXP s_x0, SEXP s_lower, SEX
 
 extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl, SEXP s_batch) {
   try {
+    // reset global eval state; a previous run leaves dangling cache pointers behind,
+    // and an aborted run may also leave a stale batch flag
+    G_EVAL_CACHE.clear();
+    G_IN_BATCH = false;
     std::pair<MyCMAParameters, MyGenoPheno> setup = cmaes_setup(s_x0, s_lower, s_upper, s_ctrl);
     MyCMAParameters &cmaparams = setup.first;
     MyGenoPheno &gp = setup.second;
