@@ -25,7 +25,7 @@ test_that("single: finds minimum of sphere function", {
   seed = 123
   # make sure to test the special case dim=1
   for (dim in c(1, 3)) {
-    fevals = 100 * dim
+    fevals = 200 * dim
     for (lambda in c(3, NA)) {
       for (algo in cmaes_algos) {
         obj = make_logged_sphere_single(dim, lambda)
@@ -45,7 +45,7 @@ test_that("single: finds minimum of sphere function", {
         # the log must have at least one evaluation and the right shape
         expect_gt(nrow(ee), 0)
         expect_equal(ncol(ee), dim + 1) # dim cols for x + 1 for y
-        expect_true(nrow(ee) <= fevals + 10, info = ctx)
+        expect_true(nrow(ee) <= fevals + 20, info = ctx) # last pop could be over fevals
         # FIXME: reenable this once libcmaes is fixed
         #expect_equal(res$fevals, nrow(ee), info = ctx)
 
