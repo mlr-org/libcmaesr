@@ -48,6 +48,12 @@ SEXP call_obj_with_error_handling_PROTECT(SEXP s_obj, SEXP s_x, R_xlen_t lambda)
     throw libcmaesr_error(libcmaesr_errcode::eval_failed, "libcmaesr: objective evaluation failed!");
   }
   check_numvec(s_y, lambda);
+  // coerce integer/logical returns to double, downstream code assumes REALSXP
+  if (TYPEOF(s_y) != REALSXP) {
+    SEXP s_y_real = PROTECT(Rf_coerceVector(s_y, REALSXP));
+    UNPROTECT(2); // s_y_real, s_y; re-protect below, no allocation in between
+    s_y = PROTECT(s_y_real);
+  }
   return s_y;
 }
 

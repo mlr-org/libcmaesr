@@ -267,6 +267,17 @@ test_that("batch: objective must return numeric vector (type check)", {
   )
 })
 
+test_that("batch: objective may return an integer vector", {
+  dim = 2
+  fn = function(x) rep(1L, nrow(x))
+  x0 = rep(0.5, dim)
+  lower = rep(-1, dim)
+  upper = rep(1, dim)
+  ctrl = cmaes_control(lambda = 4, max_fevals = 8, seed = 1)
+  res = cmaes(fn, x0, lower, upper, ctrl, batch = TRUE)
+  expect_identical(res$y, 1)
+})
+
 test_that("batch: objective must return vector of length lambda (length check)", {
   dim = 3
   lambda = 5

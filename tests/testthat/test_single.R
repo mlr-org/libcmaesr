@@ -241,6 +241,17 @@ test_that("single: objective must return numeric scalar (type check)", {
   )
 })
 
+test_that("single: objective may return an integer scalar", {
+  dim = 2
+  fn = function(x) 1L
+  x0 = rep(0.5, dim)
+  lower = rep(-1, dim)
+  upper = rep(1, dim)
+  ctrl = cmaes_control(max_fevals = 5, seed = 1)
+  res = cmaes(fn, x0, lower, upper, ctrl, batch = FALSE)
+  expect_identical(res$y, 1)
+})
+
 test_that("single: objective must return length 1 (length check)", {
   dim = 2
   fn = function(x) c(1, 2) # wrong length
