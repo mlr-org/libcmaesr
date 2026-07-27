@@ -7,9 +7,8 @@
 - run analyzers with task.json
 
 
-- we currently have a fork of libcmaes with 2 branches:
-  - r-changes: overwites cout logging to Rprintf
-  - feat-bipop-budgets: budget fixes for bipop and ipop
+- libcmaes is vendored from https://github.com/mlr-org/libcmaes (branch main),
+  which carries all R-specific patches; see tools/vendor-libcmaes.sh
 
 
 - remove all fixmes

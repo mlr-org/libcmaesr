@@ -1,14 +1,17 @@
 #!/usr/bin/env sh
 # Vendor the libcmaes sources into src/libcmaes/.
 #
-# The sources come from our fork of libcmaes, which carries R-specific patches
-# on top of upstream https://github.com/CMA-ES/libcmaes:
-#   - logging rerouted to Rprintf (branch r_changes)
-#   - IPOP/BIPOP restarts capped by remaining max_fevals (branch feat-bipop-budgets)
+# The sources come from the mlr-org fork of libcmaes, whose main branch
+# carries R-specific patches on top of upstream
+# https://github.com/CMA-ES/libcmaes:
+#   - logging rerouted to Rprintf
+#   - IPOP/BIPOP restarts capped by remaining max_fevals
+#   - C rand() and unseeded/time-seeded RNGs replaced with seed-derived
+#     mt19937 (CRAN compliance, seed reproducibility)
 #
-# Additional R-specific patches are applied directly to the vendored copy and
-# marked with "libcmaesr patch" comments; re-apply them when re-vendoring, or
-# push them to the fork first.
+# Any further R-specific patches must be pushed to the fork's main branch
+# first, then re-vendored here with this script; the vendored copy must stay
+# identical to the fork (patches are marked with "libcmaesr patch" comments).
 #
 # Surrogate model support (surrogatestrategy.*, surrcmaes.h, surrogates/) is
 # excluded: it is unused by this package and contains std::cout logging that
@@ -20,8 +23,8 @@
 
 set -e
 
-REPO="https://github.com/berndbischl/libcmaes.git"
-REF="77c2dc37df650f06dbc6d1e47b9fe905cca30a95" # tip of r_changes
+REPO="https://github.com/mlr-org/libcmaes.git"
+REF="d86c808cec7088fe6008fc1c57074134ee97b402" # main
 
 DEST="src/libcmaes"
 TMP="$(mktemp -d)"
@@ -50,4 +53,3 @@ for f in $HEADERS; do
 done
 
 echo "Vendored libcmaes @ $REF into $DEST"
-echo "Remember to re-apply the 'libcmaesr patch' changes (see git diff)."
