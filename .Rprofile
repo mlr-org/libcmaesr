@@ -1,35 +1,5 @@
-# Persistent history for this project
-if (interactive()) {
-  # Disable colored output for this project, because otherwise
-  # in error outputs paths with line-nrs are colored and we cannot ctrl-click on them in vscode
-  options(crayon.enabled = FALSE)
-
-  # enable persistent history
-  histfile = file.path(getwd(), ".Rhistory") # project-local history
-  message(sprintf("Loading history for project at %s", histfile))
-  Sys.setenv(R_HISTFILE = histfile, R_HISTSIZE = "100000")
-  try(utils::loadhistory(histfile), silent = TRUE)
-  # Save after every top-level command to avoid loss on abrupt termination
-  if (!exists(".savehist_cb", envir = .GlobalEnv)) {
-    .savehist_cb <- function(expr, value, ok, visible) {
-      try(utils::savehistory(histfile), silent = TRUE)
-      TRUE
-    }
-    base::addTaskCallback(.savehist_cb, name = "savehistory")
-  }
-
-  # autoload devel packages
-  devel_packages = c("devtools", "testthat", "roxygen2")
-  message(sprintf(
-    "Loading devel packages: %s",
-    paste(devel_packages, collapse = ", ")
-  ))
-  lapply(devel_packages, library, character.only = TRUE)
-  invisible(TRUE)
-
-  # Define some global settings
-  options(width = 150)
-}
+testthat::set_max_fails(1)
+Sys.setenv(RUSH_TEST_USE_REDIS = "true")
 
 # Hotfix languageserver: ignore virtual URIs for diagnostics
 ns = asNamespace("languageserver")
@@ -38,7 +8,32 @@ my_diagnose_file = function(uri, content, is_rmarkdown = FALSE, globals = NULL, 
   if (grepl("^(git:|vscode-|gitlens:|scm:)", uri)) {
     return(list())
   }
-  orig(uri, content, is_rmarkdown, globals, cache)
+  # Ensure `.lintr` is respected for unsaved buffers / inline linting.
+  #
+  # languageserver lints editor buffers via `lintr::lint(path, text = content)`.
+  # lintr treats this as "inline data" and (by default) skips parsing settings,
+  # which leads to default linters being used and false positives (e.g. `=`).
+  if (length(content) == 0) {
+    return(list())
+  }
+  if (is_rmarkdown) {
+    if (!any(stringi::stri_detect_regex(content, "```\\{r[ ,\\}]"))) {
+      return(list())
+    }
+  }
+  path = languageserver:::path_from_uri(uri)
+  if (length(content) == 1) {
+    content = c(content, "")
+  }
+  if (length(globals)) {
+    env_name = "languageserver:globals"
+    do.call("attach", list(globals, name = env_name, warn.conflicts = FALSE))
+    on.exit(do.call("detach", list(env_name, character.only = TRUE)))
+  }
+  lints = lintr::lint(path, cache = cache, text = content, parse_settings = TRUE)
+  diagnostics = lapply(lints, languageserver:::diagnostic_from_lint, content = content)
+  names(diagnostics) = NULL
+  diagnostics
 }
 unlockBinding("diagnose_file", ns)
 assign("diagnose_file", my_diagnose_file, envir = ns)

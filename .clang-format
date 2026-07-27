@@ -19,4 +19,7 @@ AlignAfterOpenBracket: DontAlign  # don't align under the opening bracket
 Cpp11BracedListStyle: true
 
 # One-line statements
-AllowShortIfStatementsOnASingleLine: true  # allow 'if (x) return;' on one line
+AllowShortIfStatementsOnASingleLine: WithoutElse  # allow 'if (x) return;' on one line
+
+# Final newline
+InsertNewlineAtEOF: true                   # ensure files end with a newline

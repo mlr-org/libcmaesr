@@ -1,21 +1,14 @@
 {
 
-  // ********** General settings **********
-  // Hide attic from Explorer and editor features
-  // "files.exclude": {
-  //   "attic/**": true
-  // },
-  // // Exclude attic from global search (Ctrl+Shift+F) and Quick Open
-  // "search.exclude": {
-  //   "attic/**": true
-  // },
-
-
   // ********** settings git / gitlens **********
 
   // disable "blame hover", to remove visual noise
  "gitlens.currentLine.enabled": false,
 
+ // ********** settings for cspell *************
+  // show spelling errors as hints (not in problems panel)
+  "cSpell.diagnosticLevel": "Hint",
+  // file type whitelist, useGitignore, and languageSettings live in cspell.json
 
  // ********** settings for R *************
 
@@ -26,9 +19,6 @@
     // disable hover for R, to remove visual noise
     "editor.hover.enabled": "off"
   },
-  // disable diagnostics for R, because of the dreaded normalizePath error
-  //"r.lsp.diagnostics": false,
-
 
   // ********** settings for C / C++ **********
 
