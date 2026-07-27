@@ -146,6 +146,23 @@ test_that("single: seed reproducibility", {
   expect_false(isTRUE(all.equal(res1$x, res3$x, tolerance = 1e-12)))
 })
 
+test_that("single: control list field order does not matter", {
+  dim = 2
+  fn = function(x) sum(x^2)
+  x0 = rep(0.5, dim)
+  lower = rep(-1, dim)
+  upper = rep(1, dim)
+  ctrl = cmaes_control(max_fevals = 40, lambda = 4, seed = 3, tpa = 2, tpa_dsigma = 0.5)
+  # reversing puts "tpa_dsigma" before "tpa", a prefix-matching name lookup would hit the wrong field
+  ctrl_rev = ctrl[rev(names(ctrl))]
+  class(ctrl_rev) = class(ctrl)
+
+  res1 = cmaes(fn, x0, lower, upper, ctrl, batch = FALSE)
+  res2 = cmaes(fn, x0, lower, upper, ctrl_rev, batch = FALSE)
+  expect_equal(res1$x, res2$x)
+  expect_equal(res1$y, res2$y)
+})
+
 test_that("single: elitism and tpa options run and return valid structure", {
   dim = 2
   for (elitism in c(0L, 1L, 2L, 3L)) {
