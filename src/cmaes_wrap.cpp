@@ -29,6 +29,26 @@ struct libcmaesr_error : std::runtime_error {
   explicit libcmaesr_error(libcmaesr_errcode c, const std::string &msg) : std::runtime_error(msg), code(c) {}
 };
 
+// RAII guard for the global eval state: the R objective may itself call cmaes(),
+// so each entry snapshots the globals and restores them on scope exit;
+// without this, the outer run keeps evaluating the inner run's objective
+struct eval_state_guard {
+  SEXP obj;
+  std::unordered_map<const double *, double> cache;
+  bool in_batch;
+  eval_state_guard() : obj(G_OBJ), cache(std::move(G_EVAL_CACHE)), in_batch(G_IN_BATCH) {
+    G_EVAL_CACHE.clear();
+    G_IN_BATCH = false;
+  }
+  ~eval_state_guard() {
+    G_OBJ = obj;
+    G_EVAL_CACHE = std::move(cache);
+    G_IN_BATCH = in_batch;
+  }
+  eval_state_guard(const eval_state_guard &) = delete;
+  eval_state_guard &operator=(const eval_state_guard &) = delete;
+};
+
 // Local checker used to throw a typed C++ exception without touching helpers
 static inline void check_numvec(SEXP s_y, R_xlen_t expected_length) {
   if (!Rf_isNumeric(s_y)) {
@@ -48,6 +68,12 @@ SEXP call_obj_with_error_handling_PROTECT(SEXP s_obj, SEXP s_x, R_xlen_t lambda)
     throw libcmaesr_error(libcmaesr_errcode::eval_failed, "libcmaesr: objective evaluation failed!");
   }
   check_numvec(s_y, lambda);
+  // coerce integer/logical returns to double, downstream code assumes REALSXP
+  if (TYPEOF(s_y) != REALSXP) {
+    SEXP s_y_real = PROTECT(Rf_coerceVector(s_y, REALSXP));
+    UNPROTECT(2); // s_y_real, s_y; re-protect below, no allocation in between
+    s_y = PROTECT(s_y_real);
+  }
   return s_y;
 }
 
@@ -261,6 +287,7 @@ std::pair<MyCMAParameters, MyGenoPheno> cmaes_setup(SEXP s_x0, SEXP s_lower, SEX
 
 extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, SEXP s_ctrl, SEXP s_batch) {
   try {
+    eval_state_guard guard;
     std::pair<MyCMAParameters, MyGenoPheno> setup = cmaes_setup(s_x0, s_lower, s_upper, s_ctrl);
     MyCMAParameters &cmaparams = setup.first;
     MyGenoPheno &gp = setup.second;

@@ -207,6 +207,20 @@ test_that("ipop/bipop non-batch logs show multiple restarts when budget allows",
   }
 })
 
+test_that("single: nested cmaes call inside objective does not clobber outer run", {
+  dim = 2
+  inner_fn = function(x) sum((x - 0.9)^2)
+  outer_fn = function(x) {
+    res_inner = cmaes(inner_fn, rep(0, dim), rep(-1, dim), rep(1, dim), cmaes_control(max_fevals = 30, seed = 1))
+    sum(x^2) + 0 * res_inner$y
+  }
+  ctrl = cmaes_control(max_fevals = 200, seed = 1)
+  res = cmaes(outer_fn, rep(0.5, dim), rep(-1, dim), rep(1, dim), ctrl, batch = FALSE)
+  # under clobbered state the outer run optimizes inner_fn and returns x near 0.9
+  expect_true(all(abs(res$x) < 0.1))
+  expect_equal(res$y, sum(res$x^2), tolerance = 1e-8)
+})
+
 test_that("single: x0 randomization accepts vector bounds and runs", {
   dim = 2
   obj = make_logged_sphere_single(dim, lambda = NA)
