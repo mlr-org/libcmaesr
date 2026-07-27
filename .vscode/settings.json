@@ -24,7 +24,7 @@
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "Posit.air-vscode",
     // disable hover for R, to remove visual noise
-    "editor.hover.enabled": false
+    "editor.hover.enabled": "off"
   },
   // disable diagnostics for R, because of the dreaded normalizePath error
   //"r.lsp.diagnostics": false,

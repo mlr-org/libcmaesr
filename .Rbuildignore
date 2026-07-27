@@ -1,4 +1,3 @@
-
 ^air\.toml$
 ^\.clangd$
 ^\.clang-format$
@@ -7,19 +6,19 @@
 ^\.github$
 ^\.gitignore$
 ^\.lintr$
-^\.travis\.yml$
 ^\.vscode$
-
+^\.Rprofile$
 
 ^LICENSE$
 ^man-roxygen$
-^README\.md$
 
-^src/libcmaes/build$
-^src/libcmaes/.git$
-^src/libcmaes/.travis.yml$
-^src/libcmaes/.github$
-
+^attic$
 ^benchmarks$
 ^cpp-tests$
 ^test\.R$
+^todo\.txt$
+
+^tools$
+^cran-comments\.md$
+^.*\.Rcheck$
+^.*\.tar\.gz$

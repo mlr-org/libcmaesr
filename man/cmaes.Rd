@@ -36,7 +36,7 @@ Whether the objective function evaluates a batch of points at once.
 Default is \code{FALSE}.}
 }
 \value{
-(name \code{list}). List with elements:
+(named \code{list}). List with elements:
 \itemize{
 \item 'x': (\code{numeric(n)})\cr
 The best point found, length corresponds to x0, lower and upper.
@@ -48,16 +48,16 @@ Expected distance to the minimum.
 The time taken to find the solution in seconds.
 \item 'status_code': (\code{integer(1)})\cr
 The status code, indicating success, failure, or the reason for stopping.
+See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 \item 'status_msg': (\code{character(1)})\cr
 A human-readable status message from libcmaes.
-See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 }
 }
 \description{
 Implements the CMA-ES variants provided by libcmaes, see here: \url{https://github.com/CMA-ES/libcmaes/} via
 a very light-weight C wrapper.
 
-2.The control structure allows access to most control params of the ES, but CMAES is supposed to handle most of them internally.
+The control structure allows access to most control params of the ES, but CMAES is supposed to handle most of them internally.
 Quoting Niko Hansen from here: \url{https://cma-es.github.io/}:
 
 \dQuote{The CMA-ES does not require a tedious parameter tuning for its application. In fact, the choice of strategy internal parameters
@@ -84,4 +84,12 @@ Calling into the R Api via threading is not allowed, which would happen in the f
 }
 
 In general, more details can be found here: \url{https://github.com/CMA-ES/libcmaes/wiki/}.
+}
+\examples{
+# minimize a simple quadratic function
+objective = function(x) sum(x^2)
+control = cmaes_control(seed = 1, max_fevals = 500)
+res = cmaes(objective, x0 = c(0.5, 0.5), lower = c(-5, -5), upper = c(5, 5), control = control)
+res$x
+res$y
 }

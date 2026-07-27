@@ -80,6 +80,9 @@
 #'   Use `NULL` to disable.
 #' @return A cmaes_control S3 object, which is a list with the passed arguments.
 #'
+#' @examples
+#' control = cmaes_control(algo = "bipop", max_fevals = 1000, seed = 42)
+#' print(control)
 #' @export
 cmaes_control = function(
   maximize = FALSE,
@@ -159,7 +162,7 @@ print.cmaes_control = function(x, ...) {
 #' Implements the CMA-ES variants provided by libcmaes, see here: \url{https://github.com/CMA-ES/libcmaes/} via
 #' a very light-weight C wrapper.
 #'
-#' 2.The control structure allows access to most control params of the ES, but CMAES is supposed to handle most of them internally.
+#' The control structure allows access to most control params of the ES, but CMAES is supposed to handle most of them internally.
 #' Quoting Niko Hansen from here: \url{https://cma-es.github.io/}:
 #'
 #' \dQuote{The CMA-ES does not require a tedious parameter tuning for its application. In fact, the choice of strategy internal parameters
@@ -213,7 +216,7 @@ print.cmaes_control = function(x, ...) {
 #' @param batch (`logical(1)`)\cr
 #'   Whether the objective function evaluates a batch of points at once.
 #'   Default is `FALSE`.
-#' @return (name `list`). List with elements:
+#' @return (named `list`). List with elements:
 #'   - 'x': (`numeric(n)`)\cr
 #'     The best point found, length corresponds to x0, lower and upper.
 #'   - 'y': (`numeric(1)`)\cr
@@ -229,6 +232,13 @@ print.cmaes_control = function(x, ...) {
 #'     A human-readable status message from libcmaes.
 #   - 'fevals': (`integer(1)`)\cr
 #     The number of function evaluations.
+#' @examples
+#' # minimize a simple quadratic function
+#' objective = function(x) sum(x^2)
+#' control = cmaes_control(seed = 1, max_fevals = 500)
+#' res = cmaes(objective, x0 = c(0.5, 0.5), lower = c(-5, -5), upper = c(5, 5), control = control)
+#' res$x
+#' res$y
 #' @useDynLib libcmaesr, .registration = TRUE
 #' @export
 cmaes = function(objective, x0, lower, upper, control = cmaes_control(), batch = FALSE) {

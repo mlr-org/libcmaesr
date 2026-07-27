@@ -6,7 +6,7 @@
 \alias{libcmaesr-package}
 \title{libcmaesr: R Interface to 'libcmaes'}
 \description{
-A lightweight R interface to the 'libcmaes' C++ library for Covariance Matrix Adaptation Evolution Strategy (CMA-ES). It allows for the optimization of black-box functions using the CMA-ES algorithm and its variants. Includes vendored copies of Eigen (MPL-2.0) and libcmaes (LGPL-3+); see inst/COPYRIGHTS.
+A lightweight interface to the 'libcmaes' C++ library for the Covariance Matrix Adaptation Evolution Strategy (CMA-ES). CMA-ES is a state-of-the-art evolutionary algorithm for the optimization of difficult non-linear, non-convex black-box functions, as described in Hansen and Ostermeier (2001) \doi{10.1162/106365601750190398}. Supports the active, separable and VD variants of the algorithm as well as the IPOP and BIPOP restart strategies. A patched copy of 'libcmaes' (LGPL >= 3) is bundled; see the COPYRIGHTS file for details.
 }
 \seealso{
 Useful links:
@@ -17,11 +17,19 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Bernd Bischl \email{bernd_bischl@gmx.net} (\href{https://orcid.org/0000-0001-6002-6980}{ORCID})
+\strong{Maintainer}: Bernd Bischl \email{bernd_bischl@gmx.net} (\href{https://orcid.org/0000-0001-6002-6980}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
+  \item Bernd Bischl \email{bernd_bischl@gmx.net} (\href{https://orcid.org/0000-0001-6002-6980}{ORCID}) [copyright holder]
   \item Martin Binder \email{mlr.developer@mb706.com}
+  \item Lars Kotthoff \email{lk223@st-andrews.ac.uk}
+}
+
+Other contributors:
+\itemize{
+  \item Emmanuel Benazera (author of the bundled 'libcmaes' library) [contributor, copyright holder]
+  \item Inria (copyright holder of parts of the bundled 'libcmaes' library) [copyright holder]
 }
 
 }

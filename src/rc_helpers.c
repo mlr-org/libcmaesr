@@ -199,9 +199,6 @@ SEXP RC_df_create_allnum_PROTECT(R_xlen_t n_rows, R_xlen_t n_cols, const char **
 
 // ********** R6 **********
 
-// this might be conservative and not work for inherited members
-SEXP RC_r6_get_member(SEXP s_r6, const char *name) { return Rf_findVarInFrame(Rf_install(name), s_r6); }
-
 void RC_r6_set_member(SEXP s_r6, const char *name, SEXP s_value) {
   Rf_defineVar(Rf_install(name), s_value, s_r6); // dont need to protect symbols
 }

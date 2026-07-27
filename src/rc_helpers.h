@@ -95,9 +95,6 @@ SEXP RC_df_create_allnum_PROTECT(R_xlen_t n_rows, R_xlen_t n_cols, const char **
 
 // ********** R6 **********
 
-// get R6 member by name
-// will return R_UnboundValue when the symbol is not found in frame
-SEXP RC_r6_get_member(SEXP s_r6, const char *name);
 // set R6 member by name
 // will throw an error if the symbol is not found in frame
 void RC_r6_set_member(SEXP s_r6, const char *name, SEXP s_value);

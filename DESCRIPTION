@@ -1,25 +1,38 @@
 Package: libcmaesr
 Title: R Interface to 'libcmaes'
-Version: 0.1
+Version: 0.1.0
 Authors@R: c(
-    person("Bernd", "Bischl", , "bernd_bischl@gmx.net", role = c("cre", "aut"),
+    person("Marc", "Becker", , "marcbecker@posteo.de", role = c("aut", "cre", "cph"),
+        comment = c(ORCID = "0000-0002-8115-0400")),
+    person("Bernd", "Bischl", , "bernd_bischl@gmx.net", role = "aut",
            comment = c(ORCID = "0000-0001-6002-6980")),
     person("Martin", "Binder", , "mlr.developer@mb706.com", role = "aut"),
-    person("Lars", "Kotthoff", , "lk223@st-andrews.ac.uk", role = "aut")
+    person("Lars", "Kotthoff", , "lk223@st-andrews.ac.uk", role = "aut"),
+    person("Emmanuel", "Benazera", role = c("ctb", "cph"),
+           comment = "author of the bundled 'libcmaes' library"),
+    person("Inria", role = "cph",
+           comment = "copyright holder of parts of the bundled 'libcmaes' library")
   )
-Copyright: See the file COPYRIGHTS for libcmaes copyright details
-Description: A lightweight R interface to the 'libcmaes' C++ library for Covariance Matrix Adaptation
-  Evolution Strategy (CMA-ES). It allows for the optimization of black-box functions using the CMA-ES algorithm
-  and its variants. Includes a vendored copy of libcmaes (LGPL-3+); see inst/COPYRIGHTS.
-License: LGPL-3
+Copyright: See the file COPYRIGHTS for details on the bundled 'libcmaes'
+    copyrights
+Description: A lightweight interface to the 'libcmaes' C++ library for the
+  Covariance Matrix Adaptation Evolution Strategy (CMA-ES). CMA-ES is a
+  state-of-the-art evolutionary algorithm for the optimization of difficult
+  non-linear, non-convex black-box functions, as described in Hansen and
+  Ostermeier (2001) <doi:10.1162/106365601750190398>. Supports the active,
+  separable and VD variants of the algorithm as well as the IPOP and BIPOP
+  restart strategies. A patched copy of 'libcmaes' (LGPL >= 3) is bundled;
+  see the COPYRIGHTS file for details.
+License: LGPL (>= 3)
 URL: https://github.com/mlr-org/libcmaesr
 BugReports: https://github.com/mlr-org/libcmaesr/issues
 Depends: R (>= 4.2.0)
-SystemRequirements: Eigen3, CMake (>= 3.15)
 Imports:
     checkmate,
     mlr3misc,
     stats
+LinkingTo:
+    RcppEigen
 Suggests:
     testthat (>= 3.0.0),
     callr
@@ -29,4 +42,4 @@ Encoding: UTF-8
 Language: en-US
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE, load = "installed")
-RoxygenNote: 7.3.3
+Config/roxygen2/version: 8.0.0

@@ -124,3 +124,7 @@ Create a control object for the CMA-ES algorithm.
 For more information on the parameters, see here:
 \url{https://cma-es.github.io/libcmaes/doc/html/classlibcmaes_1_1CMAParameters.html}.
 }
+\examples{
+control = cmaes_control(algo = "bipop", max_fevals = 1000, seed = 42)
+print(control)
+}

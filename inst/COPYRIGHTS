@@ -1,5 +1,6 @@
 Files: src/libcmaes/*
 Copyright: 2013-2020 Emmanuel Benazera
+           2014 Inria
 License: LGPL-3+
 Comment: This package vendors the C++ library 'libcmaes' for CMA-ES (see `src/libcmaes/`).
          It is used under the terms of the GNU Lesser General Public License version 3
