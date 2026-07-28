@@ -20,11 +20,12 @@ Description: A lightweight interface to the 'libcmaes' C++ library for the
   state-of-the-art evolutionary algorithm for the optimization of difficult
   non-linear, non-convex black-box functions, as described in Hansen and
   Ostermeier (2001) <doi:10.1162/106365601750190398>. Supports the active,
-  separable and VD variants of the algorithm as well as the IPOP and BIPOP
-  restart strategies. A patched copy of 'libcmaes' (LGPL >= 3) is bundled;
-  see the COPYRIGHTS file for details.
+  separable, and VD (diagonal plus rank-one covariance) variants of the
+  algorithm as well as the IPOP (increasing population size) and BIPOP
+  (bi-population) restart strategies. A patched copy of 'libcmaes'
+  (LGPL >= 3) is bundled; see the COPYRIGHTS file for details.
 License: LGPL (>= 3)
-URL: https://github.com/mlr-org/libcmaesr
+URL: https://libcmaesr.mlr-org.com, https://github.com/mlr-org/libcmaesr
 BugReports: https://github.com/mlr-org/libcmaesr/issues
 Depends: R (>= 4.2.0)
 Imports:

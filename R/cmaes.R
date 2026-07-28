@@ -208,10 +208,12 @@ print.cmaes_control = function(x, ...) {
 #' Quoting Niko Hansen from here: \url{https://cma-es.github.io/}:
 #'
 #' \dQuote{The CMA-ES does not require a tedious parameter tuning for its application. In fact, the choice of strategy internal parameters
-#' is not left to the user (arguably with the exception of population size λ). Finding good (default) strategy parameters is considered
-#' as part of the algorithm design, and not part of its application—the aim is to have a well-performing algorithm as is.
-#' The default population size λ is comparatively small to allow for fast convergence. Restarts with increasing population size
-#' (Auger & Hansen 2005) improve the global search performance. For the application of the CMA-ES, an initial solution,
+#' is not left to the user (arguably with the exception of population size \eqn{\lambda}). Finding good (default) strategy
+#' parameters is considered as part of the algorithm design, and not part of its application --- the aim is to have a
+#' well-performing algorithm as is.
+#' The default population size \eqn{\lambda} is comparatively small to allow for fast convergence.
+#' Restarts with increasing population size (Auger & Hansen 2005) improve the global search performance.
+#' For the application of the CMA-ES, an initial solution,
 #' an initial standard deviation (step-size, variables should be defined such that the same standard deviations can be
 #' reasonably applied to all variables, see also here) and, possibly, the termination criteria (e.g. a function tolerance)
 #' need to be set by the user. The most common applications are model calibration (e.g. curve fitting) and shape optimisation.}

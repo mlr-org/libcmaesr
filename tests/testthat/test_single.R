@@ -187,9 +187,9 @@ test_that("single: elitism and tpa options run and return valid structure", {
 })
 
 test_that("ipop/bipop non-batch logs show multiple restarts when budget allows", {
-  library(callr)
+  skip_if_not_installed("callr")
   for (algo in c("ipop", "bipop")) {
-    p = r_bg(
+    p = callr::r_bg(
       function(algo) {
         library(libcmaesr)
         dim = 2

@@ -6,7 +6,7 @@
 \alias{libcmaesr-package}
 \title{libcmaesr: R Interface to 'libcmaes'}
 \description{
-A lightweight interface to the 'libcmaes' C++ library for the Covariance Matrix Adaptation Evolution Strategy (CMA-ES). CMA-ES is a state-of-the-art evolutionary algorithm for the optimization of difficult non-linear, non-convex black-box functions, as described in Hansen and Ostermeier (2001) \doi{10.1162/106365601750190398}. Supports the active, separable and VD variants of the algorithm as well as the IPOP and BIPOP restart strategies. A patched copy of 'libcmaes' (LGPL >= 3) is bundled; see the COPYRIGHTS file for details.
+A lightweight interface to the 'libcmaes' C++ library for the Covariance Matrix Adaptation Evolution Strategy (CMA-ES). CMA-ES is a state-of-the-art evolutionary algorithm for the optimization of difficult non-linear, non-convex black-box functions, as described in Hansen and Ostermeier (2001) \doi{10.1162/106365601750190398}. Supports the active, separable, and VD (diagonal plus rank-one covariance) variants of the algorithm as well as the IPOP (increasing population size) and BIPOP (bi-population) restart strategies. A patched copy of 'libcmaes' (LGPL >= 3) is bundled; see the COPYRIGHTS file for details.
 }
 \seealso{
 Useful links:
