@@ -191,9 +191,11 @@ assert_cmaes_control = function(control) {
 
 #' @export
 print.cmaes_control = function(x, ...) {
-  cc_not_default = Filter(function(x) !is.null(x) && (length(x) > 1 || !is.na(x)), x)
+  defaults = cmaes_control()
+  is_default = function(field) field %in% names(defaults) && identical(x[[field]], defaults[[field]])
+  changed = x[!map_lgl(names(x), is_default)]
   cat("CMA-ES control object:\n")
-  print(as.call(c(alist(cmaes_control), cc_not_default)), ...)
+  print(as.call(c(alist(cmaes_control), changed)), ...)
   invisible(x)
 }
 
