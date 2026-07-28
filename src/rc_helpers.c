@@ -4,13 +4,6 @@
 
 // ********** general **********
 
-void RC_set_class(SEXP s_obj, const char *class_name) {
-  SEXP s_attr = PROTECT(Rf_allocVector(STRSXP, 1));
-  SET_STRING_ELT(s_attr, 0, Rf_mkChar(class_name));
-  Rf_setAttrib(s_obj, R_ClassSymbol, s_attr);
-  UNPROTECT(1); // s_attr
-}
-
 void RC_set_names(SEXP s_obj, R_xlen_t n, const char **names) {
   SEXP s_names = PROTECT(Rf_allocVector(STRSXP, n));
   for (R_xlen_t i = 0; i < n; i++) {
@@ -38,39 +31,13 @@ R_xlen_t RC_find_name(SEXP s_obj, const char *name) {
 
 const char *RC_charscalar_as_string(SEXP s_x) { return CHAR(STRING_ELT(s_x, 0)); }
 
-SEXP RC_intscalar_create_PROTECT(r_int32_t k) { return PROTECT(Rf_ScalarInteger(k)); }
-
-SEXP RC_dblscalar_create_PROTECT(double k) { return PROTECT(Rf_ScalarReal(k)); }
-
 // ********** vectors **********
-
-// create
-
-SEXP RC_intvec_create_PROTECT(R_xlen_t n) { return PROTECT(Rf_allocVector(INTSXP, n)); }
-
-SEXP RC_dblvec_create_PROTECT(R_xlen_t n) { return PROTECT(Rf_allocVector(REALSXP, n)); }
-
-// create + init
-
-SEXP RC_intvec_create_init_PROTECT(R_xlen_t n, const r_int32_t *values) {
-  SEXP s_res = PROTECT(Rf_allocVector(INTSXP, n));
-  memcpy(INTEGER(s_res), values, (size_t)n * sizeof(r_int32_t));
-  return s_res;
-}
 
 SEXP RC_dblvec_create_init_PROTECT(R_xlen_t n, const double *values) {
   SEXP s_res = PROTECT(Rf_allocVector(REALSXP, n));
   memcpy(REAL(s_res), values, (size_t)n * sizeof(double));
   return s_res;
 }
-
-// copy to SEXP
-
-void RC_intvec_copy_to_SEXP(const r_int32_t *x, R_xlen_t n, SEXP s_res) {
-  memcpy(INTEGER(s_res), x, n * sizeof(r_int32_t));
-}
-
-void RC_dblvec_copy_to_SEXP(const double *x, R_xlen_t n, SEXP s_res) { memcpy(REAL(s_res), x, n * sizeof(double)); }
 
 // ********** matrices **********
 
@@ -85,17 +52,6 @@ SEXP RC_dblmat_create_init_PROTECT(R_xlen_t n_rows, R_xlen_t n_cols, const doubl
 }
 
 // ********** list **********
-
-SEXP RC_list_create_emptynames_PROTECT(R_xlen_t n) {
-  SEXP s_res = PROTECT(Rf_allocVector(VECSXP, n));
-  SEXP s_names = PROTECT(Rf_allocVector(STRSXP, n));
-  for (R_xlen_t i = 0; i < n; i++) { // initialize names to empty strings
-    SET_STRING_ELT(s_names, i, Rf_mkChar(""));
-  }
-  Rf_setAttrib(s_res, R_NamesSymbol, s_names);
-  UNPROTECT(1); // s_names
-  return s_res;
-}
 
 SEXP RC_list_create_withnames_PROTECT(R_xlen_t n, const char **names) {
   SEXP s_res = PROTECT(Rf_allocVector(VECSXP, n));
@@ -124,74 +80,7 @@ SEXP RC_list_set_el_string(SEXP s_list, R_xlen_t idx, const char *x) {
   return s_list;
 }
 
-// ********** data.frame **********
-
-R_xlen_t RC_df_get_nrows(SEXP s_dt) {
-  if (XLENGTH(s_dt) == 0) {
-    return 0;
-  } else {
-    return XLENGTH(VECTOR_ELT(s_dt, 0));
-  }
-}
-
-SEXP RC_df_get_col_by_name(SEXP s_dt, const char *name) {
-  R_xlen_t i = RC_find_name(s_dt, name);
-  if (i == -1) return R_NilValue;
-  return VECTOR_ELT(s_dt, i);
-}
-
-SEXP RC_df_create_allnum_nocolnames_PROTECT(R_xlen_t n_rows, R_xlen_t n_cols) {
-  SEXP s_res = PROTECT(Rf_allocVector(VECSXP, n_cols));
-  RC_set_class(s_res, "data.frame");
-  for (R_xlen_t j = 0; j < n_cols; j++) {
-    SET_VECTOR_ELT(s_res, j, Rf_allocVector(REALSXP, n_rows));
-  }
-  // Set implicit sequential row names using R's compact encoding.
-  // Details:
-  // - In a data.frame, row names can be stored compactly as an INTSXP of length 2:
-  //     c(NA_integer_, -n)
-  //   which encodes row.names = 1:n without materializing the full vector.
-  // - This avoids allocating an integer vector of length n (memory-heavy and
-  //   impossible for n > INT_MAX).
-  // - The compact form requires that n fits in a 32-bit int, so we only use it
-  //   when n_rows <= INT_MAX. For larger n, we leave row names unset; base R will
-  //   treat them as default row names. Compact encoding beyond INT_MAX is not supported.
-  if (n_rows <= INT_MAX) {
-    SEXP s_row_names = PROTECT(Rf_allocVector(INTSXP, 2));
-    INTEGER(s_row_names)[0] = NA_INTEGER;
-    INTEGER(s_row_names)[1] = -(r_int32_t)n_rows;
-    Rf_setAttrib(s_res, R_RowNamesSymbol, s_row_names);
-    UNPROTECT(1); // s_row_names
-  }
-
-  return s_res;
-}
-
-SEXP RC_df_create_allnum_PROTECT(R_xlen_t n_rows, R_xlen_t n_cols, const char **colnames) {
-  SEXP s_res = RC_df_create_allnum_nocolnames_PROTECT(n_rows, n_cols);
-  RC_set_names(s_res, n_cols, colnames);
-  return s_res;
-}
-
-// ********** R6 **********
-
-void RC_r6_set_member(SEXP s_r6, const char *name, SEXP s_value) {
-  Rf_defineVar(Rf_install(name), s_value, s_r6); // dont need to protect symbols
-}
-
 // ********** R function calls **********
-
-SEXP RC_tryeval_PROTECT(SEXP s_fun, SEXP s_arg, const char *errmsg, r_int32_t on_err_unprotect) {
-  SEXP s_call = PROTECT(Rf_lang2(s_fun, s_arg));
-  int err = 0;
-  SEXP s_res = PROTECT(R_tryEval(s_call, R_GlobalEnv, &err));
-  if (err != 0) {
-    UNPROTECT(2 + on_err_unprotect); // s_call, s_res, + requested by user
-    Rf_error("%s", errmsg);
-  }
-  UNPROTECT(1); // s_call
-  return s_res;
-}
 
 SEXP RC_tryeval_nothrow_PROTECT(SEXP s_fun, SEXP s_arg, r_int32_t *err) {
   SEXP s_call = PROTECT(Rf_lang2(s_fun, s_arg));
