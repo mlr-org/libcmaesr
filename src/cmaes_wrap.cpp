@@ -43,7 +43,7 @@ static inline void check_numvec(SEXP s_y, R_xlen_t expected_length) {
 
 SEXP call_obj_with_error_handling_PROTECT(SEXP s_obj, SEXP s_x, R_xlen_t lambda) {
   r_int32_t err = 0;
-  SEXP s_y = RC_tryeval_nothrow_PROTECT(G_OBJ, s_x, &err);
+  SEXP s_y = RC_tryeval_nothrow_PROTECT(s_obj, s_x, &err);
   if (err != 0) {
     throw libcmaesr_error(libcmaesr_errcode::eval_failed, "libcmaesr: objective evaluation failed!");
   }
