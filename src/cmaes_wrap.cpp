@@ -91,12 +91,6 @@ template <typename Strategy> static CMASolutions run_with_batch_eval(Strategy &s
     // create lambda x dim matrix for R objective, fill with phenotype
     SEXP s_x = RC_dblmat_create_PROTECT((R_xlen_t)lambda, (R_xlen_t)dim);
 
-    // copy to R, but transposed
-    // each row of phenocands (with lambda entries), becomes a column of s_x
-    for (Eigen::Index i = 0; i < dim; ++i) {
-      std::memcpy(REAL(s_x) + i * lambda, phenocands.row(i).data(), sizeof(double) * lambda);
-    }
-
     // Column-major map over R memory, unaligned for safety
     Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>, Eigen::Unaligned> X(
       REAL(s_x), lambda, dim);
