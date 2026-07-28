@@ -260,7 +260,7 @@ cmaes = function(objective, x0, lower, upper, control = cmaes_control(), batch =
     msgs = sprintf("x0[%i] = %f is not between lower[%i] = %f and upper[%i] = %f", seq_along(x0), x0, seq_along(x0), lower, seq_along(x0), upper)
     msgs = msgs[x0 < lower | x0 > upper]
 
-    mlr3misc::stopf("'x0' must be strictly between 'lower' and 'upper'!\n%s", paste(msgs, collapse = "\n"))
+    stopf("'x0' must be between 'lower' and 'upper'!\n%s", paste(msgs, collapse = "\n"))
   }
 
   if (!is.null(control$x0_lower) && length(control$x0_lower) != length(lower)) {
