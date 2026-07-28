@@ -312,6 +312,40 @@ test_that("single: x0 must be strictly between lower and upper", {
   expect_error(cmaes(fn, x0, lower, upper, ctrl, batch = FALSE), regexp = "must be strictly between")
 })
 
+test_that("mutated control fields are re-checked", {
+  fn = function(x) sum(x^2)
+  x0 = c(0.5, 0.5)
+  lower = c(-1, -1)
+  upper = c(1, 1)
+
+  ctrl = cmaes_control(max_fevals = 5)
+  ctrl$algo = 42
+  expect_error(cmaes(fn, x0, lower, upper, ctrl), regexp = "control\\$algo")
+
+  ctrl = cmaes_control(max_fevals = 5)
+  ctrl$elitism = 7L
+  expect_error(cmaes(fn, x0, lower, upper, ctrl), regexp = "control\\$elitism")
+
+  ctrl = cmaes_control(max_fevals = 5)
+  ctrl$quiet = "yes"
+  expect_error(cmaes(fn, x0, lower, upper, ctrl), regexp = "control\\$quiet")
+
+  ctrl = cmaes_control(max_fevals = 5)
+  ctrl$algo = NULL
+  expect_error(cmaes(fn, x0, lower, upper, ctrl), regexp = "algo")
+
+  ctrl = cmaes_control(max_fevals = 5, x0_lower = c(-0.5, -0.5), x0_upper = c(0.5, 0.5))
+  ctrl$x0_upper = NULL
+  expect_error(cmaes(fn, x0, lower, upper, ctrl), regexp = "x0_upper")
+})
+
+test_that("integer bounds and control bounds work", {
+  fn = function(x) sum(x^2)
+  ctrl = cmaes_control(max_fevals = 5, seed = 1, x0_lower = c(-1L, -1L), x0_upper = c(1L, 1L))
+  res = cmaes(fn, c(0L, 0L), c(-5L, -5L), c(5L, 5L), ctrl)
+  expect_number(res$y)
+})
+
 test_that("x0 on lower bound works", {
   dim = 2
   fn = function(x) sum(x^2)
