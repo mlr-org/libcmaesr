@@ -327,5 +327,5 @@ cmaes = function(objective, x0, lower, upper, control = cmaes_control(), batch =
     control$x0_upper = as.double(control$x0_upper)
   }
 
-  .Call("c_cmaes_wrap", objective, x0, lower, upper, control, batch, PACKAGE = "libcmaesr")
+  .Call(c_cmaes_wrap, objective, x0, lower, upper, control, batch)
 }
