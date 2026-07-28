@@ -17,3 +17,7 @@
   https://github.com/mlr-org/libcmaesr/blob/main/tools/vendor-libcmaes.sh
 * The method reference for the CMA-ES algorithm (Hansen and Ostermeier,
   2001) is cited in the Description field with a DOI.
+* The CRAN status badge in README.md links to
+  https://cran.r-project.org/package=libcmaesr, which is currently a 404
+  because this is the first submission. The URL resolves once the package
+  is accepted.
