@@ -203,7 +203,8 @@ static CMASolutions dispatch_with_batch_eval(MyCMAParameters &cmaparams, SEXP s_
     return run_with_batch_eval(strat, s_obj);
   }
   default:
-    Rf_error("Unknown CMA-ES variant specified.");
+    // throw instead of Rf_error: a longjmp here would skip the destructor of the live cachedFF
+    throw libcmaesr_error(libcmaesr_errcode::unknown, "libcmaesr: unknown CMA-ES variant specified");
   }
 
   // not reached
@@ -313,6 +314,9 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
     return s_res;
   } catch (const libcmaesr_error &e) {
     Rf_error("%s", e.what());
+  } catch (const std::exception &e) {
+    // eigen asserts, bad_alloc, libcmaes-internal throws; keep the original message
+    Rf_error("libcmaesr: %s", e.what());
   } catch (...) {
     Rf_error("libcmaesr: unknown error");
   }
