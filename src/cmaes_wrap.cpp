@@ -297,7 +297,9 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
     best_y = cmaparams.get_maximize() ? -best_y : best_y;
 
     // copy results to R
-    // const char *res_names[] = {"x", "y", "edm", "time", "status_code", "status_msg", "fevals"};
+    // NOTE: we deliberately do not report the number of function evaluations. libcmaes returns the "best run"
+    // snapshot, whose local eval count undercounts the total whenever restarts happen (ipop, bipop and their sep
+    // variants). See https://github.com/CMA-ES/libcmaes/issues/258 and cpp-tests/test_fevals_mismatch.cpp.
     const char *res_names[] = {"x", "y", "edm", "time", "status_code", "status_msg"};
     SEXP s_res = RC_list_create_withnames_PROTECT(6, res_names);
     SEXP s_res_x = RC_dblvec_create_init_PROTECT(best_x.size(), best_x.data());
@@ -307,7 +309,6 @@ extern "C" SEXP c_cmaes_wrap(SEXP s_obj, SEXP s_x0, SEXP s_lower, SEXP s_upper, 
     RC_list_set_el_dblscalar(s_res, 3, sols.elapsed_time() / 1000.0); // in secs
     RC_list_set_el_intscalar(s_res, 4, sols.run_status());
     RC_list_set_el_string(s_res, 5, sols.status_msg().c_str());
-    // RC_list_set_el_intscalar(s_res, 6, sols.fevals());
     UNPROTECT(2); // s_res, s_res_x
     return s_res;
   } catch (const libcmaesr_error &e) {

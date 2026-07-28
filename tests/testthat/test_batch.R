@@ -1,5 +1,4 @@
 res_names = c("x", "y", "edm", "time", "status_code", "status_msg")
-#res_names = c("x", "y", "edm", "time", "status_code", "status_msg", "fevals")
 
 eval_log = NULL
 
@@ -60,8 +59,6 @@ test_that("cmaes finds minimum of sphere function", {
         expect_gt(nrow(ee), 0)
         expect_equal(ncol(ee), dim + 1, info = ctx) # dim cols for x + 1 for y
         expect_true(nrow(ee) <= fevals + 20, info = ctx) # last pop could be over fevals
-        # FIXME: remove this once libcmaes is fixed
-        #expect_equal(res$fevals, nrow(ee), info = ctx)
 
         # all x-evaluations must be within [lower, upper]
         ee$y = NULL

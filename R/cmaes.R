@@ -270,8 +270,6 @@ print.cmaes_control = function(x, ...) {
 #'     See here: \url{https://github.com/CMA-ES/libcmaes/wiki/Optimizing-a-function}
 #'   - 'status_msg': (`character(1)`)\cr
 #'     A human-readable status message from libcmaes.
-#   - 'fevals': (`integer(1)`)\cr
-#     The number of function evaluations.
 #' @examples
 #' # minimize a simple quadratic function
 #' objective = function(x) sum(x^2)

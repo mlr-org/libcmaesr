@@ -1,7 +1,6 @@
 eval_log = NULL
 
 res_names = c("x", "y", "edm", "time", "status_code", "status_msg")
-#res_names = c("x", "y", "edm", "time", "status_code", "status_msg", "fevals")
 
 # helper to create a logged sphere objective with lambda-aware argument checks
 make_logged_sphere_single = function(dim, lambda, lower = rep(-1, dim), upper = rep(1, dim), x0 = rep(0.5, dim)) {
@@ -46,8 +45,6 @@ test_that("single: finds minimum of sphere function", {
         expect_gt(nrow(ee), 0)
         expect_equal(ncol(ee), dim + 1) # dim cols for x + 1 for y
         expect_true(nrow(ee) <= fevals + 20, info = ctx) # last pop could be over fevals
-        # FIXME: reenable this once libcmaes is fixed
-        #expect_equal(res$fevals, nrow(ee), info = ctx)
 
         # all x-evaluations must be within [lower, upper]
         ee$y = NULL
