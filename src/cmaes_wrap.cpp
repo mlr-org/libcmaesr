@@ -217,10 +217,10 @@ std::pair<MyCMAParameters, MyGenoPheno> cmaes_setup(SEXP s_x0, SEXP s_lower, SEX
   if (lambda == NA_INTEGER) lambda = -1;
   double sigma = Rf_asReal(RC_list_get_el_by_name(s_ctrl, "sigma"));
   if (R_IsNA(sigma)) sigma = -1;
+  // cmaes() replaces an NA seed with a random one before calling us, so no NA handling is needed here
   r_int32_t seed = Rf_asInteger(RC_list_get_el_by_name(s_ctrl, "seed"));
-  seed = (seed == NA_INTEGER) ? 0 : seed;
 
-  DEBUG_PRINT("cmaes_setup: dim: %d; lambda: %d; sigma: %f; seed: %d\n", dim, lambda, sigma, seed);
+  DEBUG_PRINT("cmaes_setup: dim: %td; lambda: %d; sigma: %f; seed: %d\n", (ptrdiff_t)dim, lambda, sigma, seed);
 
   // init params and geno-pheno transform, with lin-scaling strategy
   MyGenoPheno gp(REAL(s_lower), REAL(s_upper), dim);
