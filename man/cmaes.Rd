@@ -11,8 +11,10 @@ cmaes(objective, x0, lower, upper, control = cmaes_control(), batch = FALSE)
 Objective function, to minimize.
 If \code{batch} is \code{FALSE}, \code{x} is a numeric vector of length \code{n}
 and the function must return a scalar \code{numeric}.
-If \code{batch} is \code{TRUE}, \code{x} is a numeric matrix with \code{lambda} rows and \code{n} columns.
-The function must return a numeric vector of length \code{lambda}.
+If \code{batch} is \code{TRUE}, \code{x} is a numeric matrix with one row per candidate and \code{n} columns.
+The number of rows can vary between iterations, e.g., restart strategies like IPOP and BIPOP increase the
+population size over time, so do not assume it is always \code{lambda}.
+The function must return a numeric vector with one element per row of \code{x}.
 The latter usually reduces overhead and allows you to orchestrate parallelization
 yourself if you need it because the objective function is more expensive.}
 

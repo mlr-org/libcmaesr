@@ -17,11 +17,12 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Bernd Bischl \email{bernd_bischl@gmx.net} (\href{https://orcid.org/0000-0001-6002-6980}{ORCID}) [copyright holder]
+\strong{Maintainer}: Marc Becker \email{marcbecker@posteo.de} (\href{https://orcid.org/0000-0002-8115-0400}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Bernd Bischl \email{bernd_bischl@gmx.net} (\href{https://orcid.org/0000-0001-6002-6980}{ORCID}) [copyright holder]
+  \item Marc Becker \email{marcbecker@posteo.de} (\href{https://orcid.org/0000-0002-8115-0400}{ORCID}) [copyright holder]
+  \item Bernd Bischl \email{bernd_bischl@gmx.net} (\href{https://orcid.org/0000-0001-6002-6980}{ORCID})
   \item Martin Binder \email{mlr.developer@mb706.com}
   \item Lars Kotthoff \email{lk223@st-andrews.ac.uk}
 }

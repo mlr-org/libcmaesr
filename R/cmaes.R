@@ -240,8 +240,10 @@ print.cmaes_control = function(x, ...) {
 #'   Objective function, to minimize.
 #'   If `batch` is `FALSE`, `x` is a numeric vector of length `n`
 #'   and the function must return a scalar `numeric`.
-#'   If `batch` is `TRUE`, `x` is a numeric matrix with `lambda` rows and `n` columns.
-#'   The function must return a numeric vector of length `lambda`.
+#'   If `batch` is `TRUE`, `x` is a numeric matrix with one row per candidate and `n` columns.
+#'   The number of rows can vary between iterations, e.g., restart strategies like IPOP and BIPOP increase the
+#'   population size over time, so do not assume it is always `lambda`.
+#'   The function must return a numeric vector with one element per row of `x`.
 #'   The latter usually reduces overhead and allows you to orchestrate parallelization
 #'   yourself if you need it because the objective function is more expensive.
 #' @param x0 (`numeric(n)`)\cr
