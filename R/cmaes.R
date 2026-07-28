@@ -149,6 +149,46 @@ cmaes_control = function(
   set_class(res, "cmaes_control")
 }
 
+cmaes_control_fields = c(
+  "maximize", "algo", "max_fevals", "max_iter", "ftarget", "f_tolerance", "x_tolerance", "lambda", "sigma",
+  "max_restarts", "elitism", "tpa", "tpa_dsigma", "seed", "quiet", "x0_lower", "x0_upper"
+)
+
+# control objects are plain lists and can be mutated after construction,
+# so re-check every field that the C code consumes before passing it down
+assert_cmaes_control = function(control) {
+  assert_class(control, "cmaes_control")
+  assert_list(control, names = "unique")
+  assert_names(names(control), must.include = cmaes_control_fields)
+  assert_flag(control$maximize, .var.name = "control$maximize")
+  assert_choice(control$algo, cmaes_algos, .var.name = "control$algo")
+  assert_int(control$max_fevals, lower = 1, na.ok = TRUE, .var.name = "control$max_fevals")
+  assert_int(control$max_iter, lower = 1, na.ok = TRUE, .var.name = "control$max_iter")
+  assert_number(control$ftarget, na.ok = TRUE, .var.name = "control$ftarget")
+  assert_number(control$f_tolerance, lower = 0, na.ok = TRUE, .var.name = "control$f_tolerance")
+  assert_number(control$x_tolerance, lower = 0, na.ok = TRUE, .var.name = "control$x_tolerance")
+  assert_int(control$lambda, lower = 2, na.ok = TRUE, .var.name = "control$lambda")
+  assert_number(control$sigma, lower = 0, na.ok = TRUE, .var.name = "control$sigma")
+  assert_int(control$max_restarts, lower = 0, na.ok = TRUE, .var.name = "control$max_restarts")
+  assert_int(control$elitism, lower = 0, upper = 3, na.ok = TRUE, .var.name = "control$elitism")
+  assert_int(control$tpa, lower = 0, upper = 2, na.ok = TRUE, .var.name = "control$tpa")
+  assert_number(control$tpa_dsigma, lower = 0, na.ok = TRUE, .var.name = "control$tpa_dsigma")
+  assert_int(control$seed, na.ok = TRUE, .var.name = "control$seed")
+  assert_flag(control$quiet, .var.name = "control$quiet")
+  assert_numeric(control$x0_lower,
+    min.len = 1, any.missing = FALSE, finite = TRUE, null.ok = TRUE, .var.name = "control$x0_lower")
+  assert_numeric(control$x0_upper,
+    len = length(control$x0_lower), any.missing = FALSE, finite = TRUE, null.ok = TRUE,
+    .var.name = "control$x0_upper")
+  if (is.null(control$x0_lower) != is.null(control$x0_upper)) {
+    stop("'x0_lower' and 'x0_upper' must both be NULL or not NULL!")
+  }
+  if (!is.null(control$x0_lower) && !all(control$x0_lower < control$x0_upper)) {
+    stop("'x0_lower' must be strictly smaller than 'x0_upper'!")
+  }
+  control
+}
+
 #' @export
 print.cmaes_control = function(x, ...) {
   cc_not_default = Filter(function(x) !is.null(x) && (length(x) > 1 || !is.na(x)), x)
@@ -246,7 +286,7 @@ cmaes = function(objective, x0, lower, upper, control = cmaes_control(), batch =
   assert_numeric(x0, min.len = 1, any.missing = FALSE, finite = TRUE)
   assert_numeric(lower, min.len = 1, any.missing = FALSE, finite = TRUE)
   assert_numeric(upper, min.len = 1, any.missing = FALSE, finite = TRUE)
-  assert_class(control, "cmaes_control")
+  assert_cmaes_control(control)
   assert_flag(batch)
 
   if (length(x0) != length(lower) || length(x0) != length(upper)) {
@@ -278,6 +318,15 @@ cmaes = function(objective, x0, lower, upper, control = cmaes_control(), batch =
 
   if (is.na(control$seed)) {
     control$seed = as.integer(runif(1, 1, .Machine$integer.max))
+  }
+
+  # the C code reads these with REAL(), which errors on integer vectors
+  x0 = as.double(x0)
+  lower = as.double(lower)
+  upper = as.double(upper)
+  if (!is.null(control$x0_lower)) {
+    control$x0_lower = as.double(control$x0_lower)
+    control$x0_upper = as.double(control$x0_upper)
   }
 
   .Call("c_cmaes_wrap", objective, x0, lower, upper, control, batch, PACKAGE = "libcmaesr")
