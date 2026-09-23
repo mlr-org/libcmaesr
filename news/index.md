@@ -2,6 +2,8 @@
 
 ## libcmaesr 0.1.0
 
+CRAN release: 2026-08-07
+
 - Initial CRAN release.
 - Lightweight interface to the bundled ‘libcmaes’ C++ library:
   [`cmaes()`](https://libcmaesr.mlr-org.com/reference/cmaes.md),
