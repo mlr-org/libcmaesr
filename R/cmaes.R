@@ -236,6 +236,11 @@ print.cmaes_control = function(x, ...) {
 #' 6. OpenMP is currently not supported. libcmaes uses OpenMP for the population evaluation mainly, but also for some Eigen stuff.
 #' Calling into the R Api via threading is not allowed, which would happen in the former.
 #'
+#' 7. The number of function evaluations is not reported. libcmaes returns the solution object of the best restart run,
+#' which only counts the evaluations of that run and therefore undercounts the total whenever restarts happen
+#' (`"ipop"`, `"bipop"` and their separable variants), see \url{https://github.com/CMA-ES/libcmaes/issues/258}.
+#' Count the calls to your objective function yourself if you need this number.
+#'
 #' In general, more details can be found here: \url{https://github.com/CMA-ES/libcmaes/wiki/}.
 #'
 #' @param objective (`function(x)`)\cr

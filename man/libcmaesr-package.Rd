@@ -11,6 +11,7 @@ A lightweight interface to the 'libcmaes' C++ library for the Covariance Matrix 
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://libcmaesr.mlr-org.com}
   \item \url{https://github.com/mlr-org/libcmaesr}
   \item Report bugs at \url{https://github.com/mlr-org/libcmaesr/issues}
 }
