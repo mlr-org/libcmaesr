@@ -250,6 +250,21 @@ test_that("ipop restarts double lambda across restarts when budget allows", {
 })
 
 
+test_that("batch: nested cmaes call inside objective does not clobber outer run", {
+  dim = 2
+  inner_fn = function(x) apply(x, 1, function(row) sum((row - 0.9)^2))
+  outer_fn = function(x) {
+    inner_ctrl = cmaes_control(max_fevals = 20, lambda = 4, seed = 1)
+    res_inner = cmaes(inner_fn, rep(0, dim), rep(-1, dim), rep(1, dim), inner_ctrl, batch = TRUE)
+    apply(x, 1, function(row) sum(row^2)) + 0 * res_inner$y
+  }
+  ctrl = cmaes_control(max_fevals = 200, lambda = 4, seed = 1)
+  res = cmaes(outer_fn, rep(0.5, dim), rep(-1, dim), rep(1, dim), ctrl, batch = TRUE)
+  # under clobbered state the outer run optimizes inner_fn and returns x near 0.9
+  expect_true(all(abs(res$x) < 0.1))
+  expect_equal(res$y, sum(res$x^2), tolerance = 1e-8)
+})
+
 test_that("batch: objective must return numeric vector (type check)", {
   dim = 3
   lambda = 4
